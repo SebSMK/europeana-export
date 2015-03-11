@@ -1,0 +1,74 @@
+{
+  "author": {
+    "name": "Damian Beresford",
+    "email": "dberesford@gmail.com",
+    "url": "http://www.damianberesford.com/"
+  },
+  "name": "exiv2",
+  "description": "A native c++ extension for node.js that provides support for reading & writing image metadata via Exiv2.",
+  "version": "0.4.3",
+  "homepage": "https://github.com/dberesford/exiv2node",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dberesford/exiv2node.git"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "should": "*",
+    "mocha": "*"
+  },
+  "optionalDependencies": {},
+  "engines": {
+    "node": ">= 0.9.4"
+  },
+  "main": "exiv2",
+  "scripts": {
+    "preuninstall": "rm -rf build/*",
+    "test": "mocha",
+    "install": "node-gyp rebuild"
+  },
+  "gypfile": true,
+  "contributors": [
+    {
+      "name": "Damian Beresford",
+      "email": "dberesford@gmail.com"
+    },
+    {
+      "name": "Ryan French",
+      "email": "frenchrya@gmail.com"
+    },
+    {
+      "name": "Andrew Morton",
+      "email": "drewish@katherinehouse.com"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/dberesford/exiv2node/issues"
+  },
+  "gitHead": "b03580787dbc99661d809ea2d9a1ebf619f3c2ce",
+  "_id": "exiv2@0.4.3",
+  "_shasum": "9f2abb6bf8845c38e78ddb84e2f98d145ee3cfda",
+  "_from": "exiv2@>=0.4.3 <0.5.0",
+  "_npmVersion": "1.4.13",
+  "_npmUser": {
+    "name": "drewish",
+    "email": "drewish@katherinehouse.com"
+  },
+  "maintainers": [
+    {
+      "name": "drewish",
+      "email": "drewish@katherinehouse.com"
+    },
+    {
+      "name": "damianberesford",
+      "email": "dberesford@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "9f2abb6bf8845c38e78ddb84e2f98d145ee3cfda",
+    "tarball": "http://registry.npmjs.org/exiv2/-/exiv2-0.4.3.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/exiv2/-/exiv2-0.4.3.tgz",
+  "readme": "ERROR: No README data found!"
+}

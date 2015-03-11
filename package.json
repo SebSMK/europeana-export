@@ -1,0 +1,18 @@
+{
+  "name": "corpus-image-server",
+  "version": "0.0.0",
+  "description": "Resizes images and overwrites exif on Corpus images.",
+  "main": "app.js",
+  "dependencies": {
+    "epeg": "~0.7.0",
+    "express": "3.x",
+    "imagemagick-native": "~0.2.3",
+    "q": "^1.2.0",
+    "winston": "^0.9.0"
+  },
+  "devDependencies": {
+    "mocha": "~1.12",
+    "expect.js": "~0.2.0",
+    "gm": "~1.9.0"
+  }
+}
