@@ -38,11 +38,36 @@ The project resides on github and requires *git*.
 	$ sudo apt-get install git
 	$ mkdir ~/git
 	$ cd ~/git
-	$ git clone  https://github.com/StatensMuseumforKunst/LocationHistory.git
+	$ git clone  https://github.com/StatensMuseumforKunst/corpus-image-server.git
 	
-### Run the application
+### Install the required node libraries
 
+	$ cd ~/git/corpus-image-server 
 	$ npm install
+	$ cd ~/git/corpus-image-server/public/lib/exiv2
+	$ npm install	
+
+### Mount the foto drive
+Install the cifs libraries for linux
+
+	$ sudo apt-get install cifs-utils
+
+Add this line to your */etc/fstab* file
+
+	//smk.dk/data/globus/ /mnt/fotoarkiv cifs credentials=/root/.credentials,iocharset=utf8,file_mode=0777,dir_mode=0777 0 0
+
+Create a */root/.credentials* file containing the username & password (because /etc/fstab is visible to all)
+	
+	username=administrator
+	password=xxxxxxxxxx
+	
+To reload fstab
+
+	$ mkdir -p /mnt/fotoarkiv
+	$ mount -a
+
+### Run the application	
+
 	$ node app.js
 
 Logs will be written to *server.log* 

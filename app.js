@@ -5,10 +5,13 @@ var path = require('path'),
     express = require('express'),
     Image = require('./image'),
     config = require('./config'),
+    SegfaultHandler = require('segfault-handler'),
     app = express();
 
 logger.debug("Overriding 'Express' logger");
 app.use(express.logger({format: 'dev', stream: logger.stream }));
+
+SegfaultHandler.registerHandler();
 
 /**
  * GET image request

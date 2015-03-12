@@ -40,7 +40,7 @@ Image = (function() {
     /**
      * Instance Methods 
      **/
-    Image.prototype.resize = function(data) {
+    Image.prototype.convert = function(data) {
 
         var dpi = 72, cm, inches,
             width = 0,
@@ -63,7 +63,12 @@ Image = (function() {
             height = this.height;
             logger.info('height :', this.height, 'px');
         }else /*if (this.mode === 'noresize')*/{
-            return data;
+            
+            //return data;
+            return imagemagick.convert({
+                srcData: data,
+                strip: true
+            });
         }
         return imagemagick.convert({
             srcData: data,
@@ -72,7 +77,8 @@ Image = (function() {
             quality: 100,
             density: dpi,
             resizeStyle: 'aspectfit',
-            format: 'JPEG'
+            format: 'JPEG',
+            strip: true
         });
     };
 
@@ -82,14 +88,15 @@ Image = (function() {
         
         return fs.readFile(this.path, (function(_this) {
             return function(err, data) {
-    
-                logger.info('processJPG :', image);
+
+                logger.info('processJPG :', _this.path, image);
                 fs.writeFileSync(image, data);
                 logger.info('file copied');
         
                 return (function(_this) {
                     exiv.getImageTags(image, function(err, tags) {
-                        logger.info('ObjectName: ' + tags['Iptc.Application2.ObjectName']);
+
+                        logger.info('ObjectName: (' + _this.path + ')' + tags['Iptc.Application2.ObjectName']);
                         //logger.info('tags : ' + JSON.stringify(tags, null, 4));
                         /*
                          * Default creator is "SMK Photo/Skou-Hansen/Buccarella".
@@ -102,12 +109,15 @@ Image = (function() {
                             webStatement = config.webStatementNoRights,
                             description = '',
                             newTags = [];
-                            
-                        logger.info('attempt get');
-        
-                        var solrPath = config.solrCore + '?q=id%3A' + inventoryNum + 
-                                      '+&fl=id%2C+title_first%2C+copyright&wt=json&indent=true';
-        
+                        
+                        /*Look in 'id' and 'other number'. For example: KMS8715 image uses DEP369 which 
+                         * is its 'other number'*/
+                        var solrPath = config.solrCore + '?q=(id%3A%22' + encodeURI(inventoryNum) + 
+                                      '%22)+OR+(other_numbers_andet_inventar%3A%22' +  encodeURI(inventoryNum) +
+                                      '%22)&fl=id%2C+title_first%2C+copyright&wt=json&indent=true';
+                        
+                        logger.info('attempt solr.get on', solrPath);
+                        
                         solr.get(solrPath)
                         .then( function(solrResponse){
                             var artwork = solrResponse.response.docs[0];
@@ -160,22 +170,28 @@ Image = (function() {
                             }
                             logger.info('tags : ' + JSON.stringify(newTags, null, 4));
         
-                            /* Delete ALL existing metadata */
-                            exiv.deleteImageTags(image, Object.keys(tags), function(err) {
-                                /* Add new metadata */
-                                /*TODO: handle this!*/
-                                logger.info('deleted tags');
-        
-                                exiv.setImageTags(image, newTags, function(err){
+                            /* resize and strip metadata. Don't use exiv2 to strip because
+                             * it segfaults when it gets busy*/
+                            //fs.writeFileSync(image, _this.convert(fs.readFileSync(image)));
+                            fs.writeFileSync(image, _this.convert(data));
+                            
+                            logger.info('convert finished');
+
+                            exiv.setImageTags(image, newTags, function(err){
+                                logger.info('setImageTags', image);
+                                if(err){
                                     /*TODO: handle this!*/
-                                    logger.info('set tags');
-                                    data = fs.readFileSync(image);
-                                    logger.info('read', image, 'to data');
-                                    fs.unlink(image, function(err){
-                                        logger.info(image, 'deleted');
-                                    })
-                                    return done(_this.resize(data));
-                                });
+                                    logger.error('setImageTags FAILED', image);
+                                }
+                                data = fs.readFileSync(image);
+                                fs.unlink(image, function(err){
+                                    if(err){
+                                        /*TODO: handle this!*/
+                                        logger.error('fs.unlink FAILED', image);
+                                    }
+                                    logger.info('Deleted', image);
+                                })
+                                return done(data);
                             });
                         }, function (err) {
                             /*TODO: test this!*/
