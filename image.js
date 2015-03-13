@@ -17,6 +17,17 @@ function guid() {
            s4() + '-' + s4() + s4() + s4();
 }
 
+function convertDanishChars(string){ 
+    string = string.replace( /©/g, "Copyright" );
+    string = string.replace( /Æ/g, "Ae" ); 
+    string = string.replace( /Ø/g, "Oe" ); 
+    string = string.replace( /Å/g, "Aa" );
+    string = string.replace( /æ/g, "ae" ); 
+    string = string.replace( /ø/g, "oe" ); 
+    string = string.replace( /å/g, "aa" );
+    return string; 
+}
+
 Image = (function() {
     
     var solr = new Solr(config.solrHost, config.solrPort);
@@ -114,10 +125,10 @@ Image = (function() {
                             var artwork = solrResponse.response.docs[0];
                             logger.info('artwork received : ' + artwork.toString());
                             if(artwork.copyright){
-                                copyrightText = artwork.copyright;
+                                copyrightText = convertDanishChars(artwork.copyright);
                                 webStatement = config.webStatementRights;
                             }
-                            description = artwork.title_first;
+                            description = convertDanishChars(artwork.title_first);
                             /* XMP metadata should be encoded in UTF-8
                              * IPTC metadata can use several encodings (provided by CodedCharacterSet)
                              * EXIF metadata should be encoded in ASCII. The characters "©, æ, å and ø" 
