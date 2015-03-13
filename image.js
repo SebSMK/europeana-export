@@ -64,6 +64,7 @@ Image = (function() {
         }else /*if (this.mode === 'noresize')*/{
             return imagemagick.convert({
                 srcData: data,
+                density: dpi,
                 strip: true
             });
         }

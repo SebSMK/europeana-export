@@ -79,7 +79,7 @@ Install 'supervisor' to ensure the node application is kept running, even after 
     $ sudo apt-get update
     $ sudo apt-get install supervisor
 
-Add the following to /etc/supervisor/supervisord.conf 
+Add the following to */etc/supervisor/supervisord.conf* 
 
 	[program:corpusimageserver]
 	command=node app.js
