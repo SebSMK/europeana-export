@@ -20,13 +20,12 @@ function guid() {
 Image = (function() {
     
     var solr = new Solr(config.solrHost, config.solrPort);
-    
+
     /**
      * Constructor
      **/
     function Image(path, width, height, scale, mode) {
-        
-          /*if no valid mode then fail*/
+
         if(mode !== 'width' && mode !== 'height' && mode !== 'scale' && mode !== 'noresize'){
             throw new Error('The mode must be \'width\', \'height\' or \'scale\'');
         }
@@ -63,8 +62,6 @@ Image = (function() {
             height = this.height;
             logger.info('height :', this.height, 'px');
         }else /*if (this.mode === 'noresize')*/{
-            
-            //return data;
             return imagemagick.convert({
                 srcData: data,
                 strip: true
@@ -97,27 +94,20 @@ Image = (function() {
                     exiv.getImageTags(image, function(err, tags) {
 
                         logger.info('ObjectName: (' + _this.path + ')' + tags['Iptc.Application2.ObjectName']);
-                        //logger.info('tags : ' + JSON.stringify(tags, null, 4));
-                        /*
-                         * Default creator is "SMK Photo/Skou-Hansen/Buccarella".
-                         * If we want a creator other than this, we need to know what
-                         * to look for in the metadata to trigger another text.
-                         * Those rules should be here.
-                         * */
+
                         var inventoryNum = tags[config.smkInventoryNumber],
+                            encodedInventoryNum = encodeURI(inventoryNum),
                             copyrightText = config.copyrightDefault,
                             webStatement = config.webStatementNoRights,
                             description = '',
-                            newTags = [];
-                        
-                        /*Look in 'id' and 'other number'. For example: KMS8715 image uses DEP369 which 
-                         * is its 'other number'*/
-                        var solrPath = config.solrCore + '?q=(id%3A%22' + encodeURI(inventoryNum) + 
-                                      '%22)+OR+(other_numbers_andet_inventar%3A%22' +  encodeURI(inventoryNum) +
+                            newTags = [],
+                            /* Solr should look in 'id' and 'other number'. For example: KMS8715 image
+                             * uses DEP369 which is its 'other number'*/
+                            solrPath = config.solrCore + '?q=(id%3A%22' + encodedInventoryNum + 
+                                      '%22)+OR+(other_numbers_andet_inventar%3A%22' +  encodedInventoryNum +
                                       '%22)&fl=id%2C+title_first%2C+copyright&wt=json&indent=true';
-                        
+
                         logger.info('attempt solr.get on', solrPath);
-                        
                         solr.get(solrPath)
                         .then( function(solrResponse){
                             var artwork = solrResponse.response.docs[0];
@@ -127,21 +117,20 @@ Image = (function() {
                                 webStatement = config.webStatementRights;
                             }
                             description = artwork.title_first;
-                            /* Notes:
-                             * 
-                             * IPTC XMP metadata should be encoded in UTF-8
+                            /* XMP metadata should be encoded in UTF-8
                              * IPTC metadata can use several encodings (provided by CodedCharacterSet)
                              * EXIF metadata should be encoded in ASCII. The characters "©, æ, å and ø" 
-                             *   do not exist in ASCII  (but exist in some other 8bit encodings)
-                             * Javascript strings are UCS2 2 byte unicode
+                             *      do not exist in ASCII (but do exist in some other 8bit encodings
+                             *      which some windows clients are using)
+                             * (Javascript strings are UCS2 2 byte unicode)
                              * 
                              * Photoshop writes UTF-8 everywhere (wrong for EXIF), and we're going to do 
-                             * the same.
+                             * the same. There's probably some image programs that won't show these characters
+                             * properly if they follow the specification exactly, but we accept that.
                              * 
-                             * Exiv2 (exiv2node is used here)
-                             *   allows writing UTF-8 to EXIF (wrong, but good for us)
-                             *   won't write UTF-8 to XMP (but I've made a fix for this)
-                             * 
+                             * Exiv2node won't write UTF-8 to XMP. I've made a fix for this which is
+                             * why we're using a local version of exiv2node and not that in npm. I've
+                             * made a pull request to the maintainer so it should be available at some point.
                              * */
                             newTags = {
                                 /*EXIF*/
@@ -169,33 +158,30 @@ Image = (function() {
                                 'Xmp.xmpRights.WebStatement' : webStatement
                             }
                             logger.info('tags : ' + JSON.stringify(newTags, null, 4));
-        
-                            /* resize and strip metadata. Don't use exiv2 to strip because
+
+                            /* Resize and strip metadata. Don't use exiv2 to strip because
                              * it segfaults when it gets busy*/
-                            //fs.writeFileSync(image, _this.convert(fs.readFileSync(image)));
                             fs.writeFileSync(image, _this.convert(data));
-                            
                             logger.info('convert finished');
 
                             exiv.setImageTags(image, newTags, function(err){
                                 logger.info('setImageTags', image);
                                 if(err){
-                                    /*TODO: handle this!*/
-                                    logger.error('setImageTags FAILED', image);
+                                    logger.error('setImageTags FAILED:', image);
+                                    return done('', '');
                                 }
                                 data = fs.readFileSync(image);
                                 fs.unlink(image, function(err){
                                     if(err){
-                                        /*TODO: handle this!*/
-                                        logger.error('fs.unlink FAILED', image);
+                                        logger.error('fs.unlink FAILED:', image);
+                                    }else{
+                                        logger.info('Deleted', image);
                                     }
-                                    logger.info('Deleted', image);
                                 })
                                 return done(data);
                             });
                         }, function (err) {
-                            /*TODO: test this!*/
-                            logger.error('failed to fetch artwork: ' + err);
+                            logger.error('fetch artwork details FAILED:', err);
                             return done('', '');
                         });
                     });
