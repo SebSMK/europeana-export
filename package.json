@@ -7,6 +7,7 @@
     "epeg": "~0.7.0",
     "express": "3.x",
     "imagemagick-native": "^1.7.0",
+    "mmmagic": "^0.3.13",
     "q": "^1.2.0",
     "segfault-handler": "^0.2.4",
     "winston": "^0.9.0"

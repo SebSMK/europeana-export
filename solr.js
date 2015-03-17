@@ -37,7 +37,7 @@ Solr = (function() {
             resp.on('end', function() {
                 if (data !== ''){
                     var jsonData = JSON.parse(data);
-                    logger.info("Solr: response received", JSON.stringify(jsonData, null, 4));
+                    logger.debug("Solr: response received", JSON.stringify(jsonData, null, 4));
                     deferred.resolve(jsonData);
                 }else{
                     logger.error("Solr: empty GET result returned");
@@ -49,6 +49,12 @@ Solr = (function() {
                 deferred.reject(err);
             });
         });
+        
+        get.on('error', function(e) {
+            logger.error("Solr:", e.message);
+            deferred.reject("Solr:" + e.message);
+        });
+        
         return deferred.promise;
     }
     return Solr;

@@ -61,6 +61,9 @@ app.get('/*', (function(_this) {
             return image.process(function(data, type) {
                 res.set('Content-Type', type);
                 return res.send(data);
+            },
+            function(error) {
+                return res.status(500).send({error: error});
             });
         });
     };
