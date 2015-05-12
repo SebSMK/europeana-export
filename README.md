@@ -56,9 +56,9 @@ Add this line to your */etc/fstab* file
 
 	//smk.dk/data/globus/ /mnt/fotoarkiv cifs credentials=/root/.credentials,iocharset=utf8,file_mode=0777,dir_mode=0777 0 0
 
-Create a */root/.credentials* file containing the username & password (because /etc/fstab is visible to all)
+Create a */root/.credentials* file containing the username & password (because /etc/fstab is visible to all). Note the 'SMK' domain is also necessary - without it the mount will sometimes fail.
 	
-	username=administrator
+	username=SMK\administrator
 	password=xxxxxxxxxx
 	
 Create the mount directory and reload fstab
