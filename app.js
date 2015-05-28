@@ -6,26 +6,12 @@ var path = require('path'),
     Image = require('./image'),
     config = require('./config'),
     SegfaultHandler = require('segfault-handler'),
-    url = require('url'),
-    exec = require('child_process').exec,
     app = express();
 
 logger.debug("Overriding 'Express' logger");
 app.use(express.logger({format: 'dev', stream: logger.stream }));
 
 SegfaultHandler.registerHandler();
-
-//Function to download file using wget
-var download_file_wget = function(file_url) {
-
-    var file_name = url.parse(file_url).pathname.split('/').pop();
-    var wget = 'wget -P ' + config.tempFilePath + ' ' + file_url;
-    
-    var child = exec(wget, function(err, stdout, stderr) {
-        if (err) throw err;
-        else console.log(file_name + ' downloaded to ' + config.tempFilePath);
-    });
-};
 
 /**
  * GET image request
@@ -44,31 +30,20 @@ app.get('/*', (function(_this) {
         /*check values for limits*/
         
         if(pic){
-            
-            /* This should be removed as soon as possible - it's nothing to do with Corpus
-             * but is a generic resizing functionality for any file which can be accessed
-             * over http. It's used by the SMK webpage search.
-             * */
-            if(url.parse(pic)){
-                filePath = download_file_wget();
-                logger.info("pic resourcePath :", resourcePath);
-            }else{
-                /* For backwards compatability with the old cspic server api, the path can be
-                 * set as an argument, like this:
-                 * http://localhost:4000/?pic=globus/CORPUS%202015/KMS6111.jpg&mode=width&width=300
-                 */
-                resourcePath = decodeURIComponent(pic);
-                logger.info("pic resourcePath :", resourcePath);
-                filePath = path.join(config.root, resourcePath);
-            }
+            /* For backwards compatability with the old cspic server api, the path can be
+             * set as an argument, like this:
+             * http://localhost:4000/?pic=globus/CORPUS%202015/KMS6111.jpg&mode=width&width=300
+             */
+            resourcePath = decodeURIComponent(pic);
+            logger.info("pic resourcePath :", resourcePath);
         }else{
             /* We now support this form of request for the resource as well:
              * http://localhost:4000/globus/CORPUS%202015/KMS6111.jpg?mode=width&width=300
              */
             resourcePath = decodeURIComponent(req.path)
             logger.info("resourcePath :", resourcePath);
-            filePath = path.join(config.root, resourcePath);
         }
+        filePath = path.join(config.root, resourcePath);
         logger.info("filePath name :", filePath);
         
         return fs.exists(filePath, function(exists) {
