@@ -3,6 +3,7 @@ var config = {
 
     // Metadata values
     attribution : "SMK Photo/Skou-Hansen/Buccarella", /*max 32 bytes!*/
+    oldAttribution : 'Hans Petersen',
     copyrightDefault : 'Public Domain (CC0)',
     webStatementNoRights : 'http://www.smk.dk/en/copyright/creative-commons/',
     webStatementRights : 'http://www.smk.dk/en/copyright/',
@@ -17,6 +18,7 @@ var config = {
     solrCore : '/solr/prod_SQL_full_export/select',
 
     smkInventoryNumber : 'Iptc.Application2.ObjectName',
+    originalCopyright : 'Iptc.Application2.Copyright',
     tempFilePath : '/tmp/',
     root : '/mnt/fotoarkiv/',
     port : 4000

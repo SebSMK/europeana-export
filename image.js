@@ -182,11 +182,49 @@ Image = (function() {
         });
         return deferred.promise;
     }
+    
+    /* The string received from solr for describing artists needs some work in order
+     * to generate a readable text for the description*/
+    function parseArtist(artist){
+
+        var artistTxt = '', artists_split, values, name, role, birth, death,
+            len = 0;
+            split_1_niv = ";-;",
+            split_2_niv = ";--;";
+
+        artists_split = artist.split(split_1_niv);
+        len = artists_split.length;
+
+        for(var i = 0; i < len; i++) { 
+            values = artists_split[i].split(split_2_niv);
+            role = values[1];
+            name = values[2];
+            birth = values[3]; /*year only*/
+            death = values[6]; /*year only*/
+            
+            if(i > 0){
+                artistTxt += '; '; /*separates artists*/
+            }
+            /* A bit of a grey area, but this is how we decide what a 'proper' artist is*/
+            if(role !== 'trykker' && role !== 'udgiver' && role !== 'forfatter/redaktør'){
+                artistTxt += name + ' (' + birth + '-' + death + ')';
+            }
+        }
+        return artistTxt;
+    };
 
     function lookupArtwork(tags, type) {
         
         var deferred = Q.defer(),
-            inventoryNum = '';
+            copyrightText = config.copyrightDefault,
+            webStatement = config.webStatementNoRights,
+            inventoryNum = '',
+            originalCopyright = '',
+            attributionText = '',
+            encodedInventoryNum = '',
+            description = '',
+            newTags = [],
+            solrPath = '';
         
         if(type !== 'image/jpeg'){
             logger.info('lookupArtwork: type is not image/jpeg, returning');
@@ -195,21 +233,31 @@ Image = (function() {
         
         try{
             inventoryNum = tags[config.smkInventoryNumber];
+            encodedInventoryNum = encodeURI(inventoryNum);
+            /* Solr should look in 'id' and 'other number'. For example: 
+             * KMS8715 image uses DEP369 which is its 'other number' */
+            solrPath = config.solrCore + '?q=(id%3A%22' + encodedInventoryNum + 
+                      '%22)+OR+(other_numbers_andet_inventar%3A%22' +  encodedInventoryNum +
+                      '%22)&fl=id%2C+title_first%2C+copyright%2C+producents_data%2C+object_production_date_eng&wt=json&indent=true';
+            
         }catch(ex){
             logger.error('lookup inventoryNum FAILED');
             return deferred.resolve();
             //return deferred.reject(ex);
         }
-        var encodedInventoryNum = encodeURI(inventoryNum),
-            copyrightText = config.copyrightDefault,
-            webStatement = config.webStatementNoRights,
-            description = '',
-            newTags = [],
-            /* Solr should look in 'id' and 'other number'. For example: 
-             * KMS8715 image uses DEP369 which is its 'other number' */
-            solrPath = config.solrCore + '?q=(id%3A%22' + encodedInventoryNum + 
-                      '%22)+OR+(other_numbers_andet_inventar%3A%22' +  encodedInventoryNum +
-                      '%22)&fl=id%2C+title_first%2C+copyright&wt=json&indent=true';
+        
+        /* Special case for older images which should have a different
+         * attribution text*/
+        try{
+            originalCopyright = tags[config.originalCopyright];
+        }catch(ex){
+            logger.error('originalCopyright field not present');
+        }
+        if(originalCopyright === config.oldAttribution){
+            attributionText = config.oldAttribution;
+        }else{
+            attributionText = config.attribution;
+        }
 
         logger.info('lookupArtwork', solrPath);
         
@@ -220,26 +268,30 @@ Image = (function() {
                 copyrightText = convertDanishChars(artwork.copyright);
                 webStatement = config.webStatementRights;
             }
-            description = convertDanishChars(artwork.title_first);
+            description = convertDanishChars(parseArtist(artwork.producents_data));
+            description += ', ' + convertDanishChars(artwork.title_first);
+            description += ', ' + artwork.object_production_date_eng;
             /*
              * XMP metadata should be encoded in UTF-8
              * IPTC metadata can use several encodings (provided by CodedCharacterSet)
              * EXIF metadata should be encoded in ASCII. The characters "©, æ, å and ø" 
              *      do not exist in ASCII (but do exist in some other 8bit encodings
              *      which some windows clients are using)
-             * (Javascript strings are UCS2 2 byte unicode)
              * 
              * Photoshop writes UTF-8 everywhere (wrong for EXIF), and we're going to do 
-             * the same. There's probably some image programs that won't show these characters
-             * properly if they follow the specification exactly, but we accept that.
+             * the same. Javascript strings are UCS2 2 byte unicode. There's some 
+             * image viewing software that won't show these characters properly if they follow the 
+             * specification exactly, but we accept that as there's other software which will
+             * show it incorrectly if we do.
              * 
-             * Exiv2node won't write UTF-8 to XMP. I've made a fix for this which is
-             * why we're using a local version of exiv2node and not that in npm. I've
-             * made a pull request to the maintainer so it should be available at some point.
+             * Exiv2node module has bug where it won't write UTF-8 to XMP. I've made a fix for
+             * this which is why we're using a local version of exiv2node and not that in npm. I've
+             * made a pull request to the maintainer so it should be available at some point in
+             * the official release.
              */
             newTags = {
                 /*EXIF*/
-                'Exif.Image.Artist' : config.attribution,
+                'Exif.Image.Artist' : attributionText,
                 'Exif.Image.Copyright' : copyrightText,
                 'Exif.Image.ImageDescription' : description, 
                 /*IPTC*/
@@ -247,7 +299,7 @@ Image = (function() {
                 'Iptc.Application2.Headline' : inventoryNum, /*256 bytes*/
                 'Iptc.Application2.City' : config.city, /*32 bytes*/
                 'Iptc.Application2.CountryName' : config.country, /*64 bytes*/
-                'Iptc.Application2.Byline' : config.attribution, /*32 bytes*/
+                'Iptc.Application2.Byline' : attributionText, /*32 bytes*/
                 'Iptc.Application2.BylineTitle' : config.photo, /*32 bytes*/
                 'Iptc.Application2.Credit' : config.smk, /*32 bytes*/
                 'Iptc.Application2.ObjectName' : inventoryNum, /*64 bytes*/
@@ -257,7 +309,7 @@ Image = (function() {
                 'Xmp.dc.format' : 'image/jpeg',
                 'Xmp.dc.title' : inventoryNum,
                 'Xmp.dc.description' : description,
-                'Xmp.dc.creator' : config.attribution,
+                'Xmp.dc.creator' : attributionText,
                 'Xmp.dc.rights' : copyrightText,
                 'Xmp.xmpRights.Marked' : 'True', 
                 'Xmp.xmpRights.WebStatement' : webStatement
