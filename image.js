@@ -191,6 +191,10 @@ Image = (function() {
             len = 0;
             split_1_niv = ";-;",
             split_2_niv = ";--;";
+            
+        if(!artist){
+            return '';
+        }
 
         artists_split = artist.split(split_1_niv);
         len = artists_split.length;
@@ -268,9 +272,13 @@ Image = (function() {
                 copyrightText = convertDanishChars(artwork.copyright);
                 webStatement = config.webStatementRights;
             }
-            description = convertDanishChars(parseArtist(artwork.producents_data));
-            description += ', ' + convertDanishChars(artwork.title_first);
-            description += ', ' + artwork.object_production_date_eng;
+            if(artwork.producents_data){
+                description = convertDanishChars(parseArtist(artwork.producents_data)) + ', ';
+            }
+            description += convertDanishChars(artwork.title_first);
+            if(artwork.object_production_date_eng){
+                description += ', ' + artwork.object_production_date_eng;
+            }
             /*
              * XMP metadata should be encoded in UTF-8
              * IPTC metadata can use several encodings (provided by CodedCharacterSet)
