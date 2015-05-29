@@ -90,7 +90,7 @@ Add the following to */etc/supervisor/supervisord.conf*
 	redirect_stderr=true
 	environment=NODE_ENV="production"
 
-Run supervisor
+Run supervisor (as root)
 
     sudo service supervisor restart
 
