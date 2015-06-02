@@ -58,8 +58,9 @@ Add this line to your */etc/fstab* file
 
 Create a */root/.credentials* file containing the username & password (because /etc/fstab is visible to all). Note the 'SMK' domain is also necessary - without it the mount will sometimes fail.
 	
-	username=SMK\administrator
+	username=administrator
 	password=xxxxxxxxxx
+	domain=SMK
 	
 Create the mount directory and reload fstab
 
