@@ -133,16 +133,17 @@ Image = (function() {
             }            
             return readFile(self.image); 
             })        
-        .then(function(data) {                        
-            return writeFile(self.image + '.tmp_pyr', data); 
+        .then(function(data) {
+            self.pyr_path = config.tempFilePath + self.imageTags['Iptc.Application2.Headline'] + '_' + guid() + '_pyr.tif';          
+            return writeFile(self.pyr_path + '.tmp', data); 
             })    
          .then(function() { 
-            logger.info('create tmp pyr tiff');            
-            return convertPyr(self.image + '.tmp_pyr');             
+            logger.info('create tmp pyr tiff');       
+            return convertPyr(self.pyr_path);             
             }) 
           .then(function(type) {              
             logger.info('create pyr tiff');            
-            return deleteFile(self.image + '.tmp_pyr').then(function(){logger.info('deleted temp copy', self.image, 
+            return deleteFile(self.pyr_path + '.tmp').then(function(){logger.info('deleted temp copy', self.pyr_path + '.tmp', 
                                                    "(" + self.path + ")")});          
             })    
         /*return orig file*/   
@@ -168,9 +169,10 @@ Image = (function() {
      * Private methods 
      **/
     function convertPyr(path) {
+        var self = this;
         var deferred = Q.defer();
-        var source =  path;
-        var target = path.replace('.image.tmp_pyr', '_pyr.tif');
+        var source =  path + '.tmp';
+        var target = path;
         var cmd = sprintf("convert '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target)
         
         logger.info(cmd);
