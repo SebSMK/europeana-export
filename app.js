@@ -4,8 +4,9 @@ var path = require('path'),
     fs = require('fs'),
     express = require('express'),
     Image = require('./image'),
+    MongoDB = require('./mongo'),
     config = require('./config'),
-    SegfaultHandler = require('segfault-handler'),
+    SegfaultHandler = require('segfault-handler'),    
     app = express();
 
 logger.debug("Overriding 'Express' logger");
@@ -16,8 +17,13 @@ SegfaultHandler.registerHandler();
 /**
  * GET image request
  * */
-app.get('/*', (function(_this) {
+app.get('/convert/*', (function(_this) {   
 
+    // Connect to mongo (url to mongo is in config.js)    
+    var mongodb = new MongoDB();
+    mongodb.connect();
+    mongodb.disconnect();
+    
     return function(req, res) {
         var filePath, 
             resourcePath, 

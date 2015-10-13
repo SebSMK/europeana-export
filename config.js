@@ -17,6 +17,9 @@ var config = {
     solrPort : 8080,
     solrCore : '/solr/prod_SQL_full_export/select',
 
+    // MongoDB
+    mongoURL: 'mongodb://localhost:27017/DAM_PYR',
+
     smkInventoryNumber : 'Iptc.Application2.ObjectName',
     originalCopyright : 'Iptc.Application2.Copyright',
     tempFilePath : '/tmp/',
