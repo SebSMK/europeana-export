@@ -20,7 +20,7 @@ var config = {
     smkInventoryNumber : 'Iptc.Application2.ObjectName',
     originalCopyright : 'Iptc.Application2.Copyright',
     tempFilePath : '/tmp/',
-    root : '/mnt/fotoarkiv/',
+    root : '/mnt/fotoII/',
     port : 4000
 }
 

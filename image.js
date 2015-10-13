@@ -4,6 +4,9 @@ var imagemagick = require('imagemagick-native'),
     fs = require('fs'),
     exiv = require('./public/lib/exiv2/exiv2'),
     Solr = require('./solr'),
+    //exec = require('exec'),
+    exec = require('child_process').exec,    
+    sprintf = require('sprintf-js').sprintf,
     Q = require('q'),
     config = require('./config'),
     mmm = require('mmmagic'),
@@ -13,31 +16,6 @@ var imagemagick = require('imagemagick-native'),
     deleteFile = Q.denodeify(fs.unlink),
     writeFile = Q.denodeify(fs.writeFile),
     readFile = Q.denodeify(fs.readFile);
-
-/**
- * Helper functions
- **/
-
-function guid() {
-    function s4() {
-      return Math.floor((1 + Math.random()) * 0x10000)
-        .toString(16)
-        .substring(1);
-    }
-    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-           s4() + '-' + s4() + s4() + s4();
-}
-
-function convertDanishChars(string){ 
-    string = string.replace( /©/g, "Copyright" );
-    string = string.replace( /Æ/g, "Ae" ); 
-    string = string.replace( /Ø/g, "Oe" ); 
-    string = string.replace( /Å/g, "Aa" );
-    string = string.replace( /æ/g, "ae" ); 
-    string = string.replace( /ø/g, "oe" ); 
-    string = string.replace( /å/g, "aa" );
-    return string; 
-}
 
 Image = (function() {
     
@@ -67,7 +45,9 @@ Image = (function() {
         var dpi = 72, cm, inches,
             width = 0,
             height = 0
-            type = (this.type == 'image/jpeg') ? 'jpeg' : '';
+//            type = (this.type == 'image/jpeg') ? 'jpeg' : '';
+            type = (this.type == 'image/tif') ? 'tif' : '';
+//            type = this.type.replace('image/', '');
 
         logger.info('Image.prototype.convert:', this.mode);
 
@@ -122,11 +102,11 @@ Image = (function() {
             logger.info('detected file type :', type);
             self.type = type;
             return writeFile(self.image, self.imageData); 
-            }) 
+            })       
         .then(function() {
             logger.info('created temp copy', self.image, "(" + self.path + ")");
             return openMetadata(self.image);
-            })
+            })                  
         .then(function(tags) { 
             logger.info('opened metadata', self.path);
             return lookupArtwork(tags, self.type); 
@@ -145,18 +125,37 @@ Image = (function() {
             }
             return Q.defer().resolve();/*just hit next then*/
             })
-        .then(function() { 
+         
+         /*create pyr file*/            
+         .then(function() { 
             if(self.imageTags){
                 logger.info('added new metadata', self.image,  "(" + self.path + ")");
-            }
+            }            
             return readFile(self.image); 
-            })
+            })        
+        .then(function(data) {                        
+            return writeFile(self.image + '.tmp_pyr', data); 
+            })    
+         .then(function() { 
+            logger.info('create tmp pyr tiff');            
+            return convertPyr(self.image + '.tmp_pyr');             
+            }) 
+          .then(function(type) {              
+            logger.info('create pyr tiff');            
+            return deleteFile(self.image + '.tmp_pyr').then(function(){logger.info('deleted temp copy', self.image, 
+                                                   "(" + self.path + ")")});          
+            })    
+        /*return orig file*/   
+        .then(function() { 
+            logger.info('delete tmp pyr tiff');            
+            return readFile(self.image); 
+            })        
         .then(function(data) { 
             logger.info('read updated data from file', self.image, "(" + self.path + ")");
             self.imageData = data;
             deleteFile(self.image).then(function(){logger.info('deleted temp copy', self.image, 
                                                    "(" + self.path + ")")}); 
-            return done(self.imageData, self.type); 
+            return done(self.imageData, self.type);            
             })
         .catch(function (err) {
             /*catch and break on all errors or exceptions on all the above methods*/
@@ -168,6 +167,29 @@ Image = (function() {
     /**
      * Private methods 
      **/
+    function convertPyr(path) {
+        var deferred = Q.defer();
+        var source =  path;
+        var target = path.replace('.image.tmp_pyr', '_pyr.tif');
+        var cmd = sprintf("convert '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target)
+        
+        logger.info(cmd);
+              
+        var child = exec(cmd,
+          function (error, stdout, stderr) {                        
+            if (error !== null && error !== '') {
+              logger.error('exec error: ' + error);
+              deferred.reject(error);
+            }else{
+              logger.info('convertPyr Ok');
+              deferred.resolve('0');  
+            }
+        });
+                
+        return deferred.promise;                
+    } 
+     
+     
     function detectFile(path) {
         
         var deferred = Q.defer();
@@ -231,8 +253,8 @@ Image = (function() {
             solrPath = '';
         
         if(type !== 'image/jpeg'){
-            logger.info('lookupArtwork: type is not image/jpeg, returning');
-            return deferred.resolve();
+            logger.info('lookupArtwork: type is not image/jpeg, but not returning');
+            //return deferred.resolve();
         }
         
         try{
@@ -333,5 +355,30 @@ Image = (function() {
     } 
     return Image;
 })();
+
+/**
+ * Helper functions
+ **/
+
+function guid() {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+           s4() + '-' + s4() + s4() + s4();
+}
+
+function convertDanishChars(string){ 
+    string = string.replace( /©/g, "Copyright" );
+    string = string.replace( /Æ/g, "Ae" ); 
+    string = string.replace( /Ø/g, "Oe" ); 
+    string = string.replace( /Å/g, "Aa" );
+    string = string.replace( /æ/g, "ae" ); 
+    string = string.replace( /ø/g, "oe" ); 
+    string = string.replace( /å/g, "aa" );
+    return string; 
+}
 
 module.exports = Image;
