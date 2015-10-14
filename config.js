@@ -12,10 +12,15 @@ var config = {
     photo : 'Photographers at SMK',
     smk : 'Statens Museum for Kunst',
 
-    // Solr core
+    // Solr corpus
     solrHost : '172.20.1.73',
     solrPort : 8080,
     solrCore : '/solr/prod_SQL_full_export/select',
+    
+    // Solr dam
+    solrDAMHost : '172.20.1.159',
+    solrDAMPort : 8180,
+    solrDAMCore : '/solr-example/dev_DAM/',
 
     // MongoDB
     mongoURL: 'mongodb://localhost:27017/DAM_PYR',

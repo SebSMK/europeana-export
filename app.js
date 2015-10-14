@@ -6,7 +6,8 @@ var path = require('path'),
     Image = require('./image'),
     //MongoDB = require('./mongo'),
     config = require('./config'),
-    SegfaultHandler = require('segfault-handler'),    
+    SegfaultHandler = require('segfault-handler'), 
+    Solr = require('./solr'),   
     app = express();
 
 logger.debug("Overriding 'Express' logger");
@@ -66,6 +67,17 @@ app.get('/convert/*', (function(_this) {
                 return res.send(400);
             }
             return image.process(function(data, type) {
+                var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);
+                var jsonposted = [{
+                        "id":"561e19ebcd46a",
+                        "value":{"set":'caca'}
+                    }];
+                solr.postjson(jsonposted)
+                    .then( function(solrResponse){
+                       logger.info("post response :", solrResponse);
+                    });
+                    
+                    
                 res.set('Content-Type', type);
                 return res.send(data);
             },
@@ -74,6 +86,8 @@ app.get('/convert/*', (function(_this) {
             });
         });
     };
+    
+    
     
     return processed_image_stream;
 })(this));
