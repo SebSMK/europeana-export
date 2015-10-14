@@ -4,7 +4,7 @@ var path = require('path'),
     fs = require('fs'),
     express = require('express'),
     Image = require('./image'),
-    //MongoDB = require('./mongo'),
+    MongoDB = require('./mongo'),
     config = require('./config'),
     SegfaultHandler = require('segfault-handler'), 
     Solr = require('./solr'),   
@@ -15,17 +15,47 @@ app.use(express.logger({format: 'dev', stream: logger.stream }));
 
 SegfaultHandler.registerHandler();
 
-/**
- * GET image request
- * */
-app.get('/convert/*', (function(_this) {   
-
-/*
+app.get('/mongo', function(req, res){
     // Connect to mongo (url to mongo is in config.js)    
     var mongodb = new MongoDB();
     mongodb.connect();
+    var doc = [{a : 1}, {a : 2}, {a : 3}];    
+    /*
+    mongodb.insertDocuments(doc, function() {
+        logger.info('documents inserted');
+    });
+    
+    mongodb.findDocuments(function() {
+        logger.info('documents found');
+    });
+      */
     mongodb.disconnect();
-  */  
+    res.send(200);
+});
+
+app.get('/solr', function(req, res){
+    var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);
+    var jsonposted = [{
+            "id":"561e19ebcd46a",
+            "value":{"set":'kiki'}
+        }];
+    solr.postjson(jsonposted)
+        .then( function(solrResponse){
+           logger.info("post response :", solrResponse);
+           res.send(solrResponse);
+        });
+    
+});
+/*
+                
+                */    
+
+
+/**
+ * GET image request
+ * */
+app.get('/convert/*', (function(_this) {      
+  
     var processed_image_stream = function(req, res) {
         var filePath, 
             resourcePath, 
@@ -66,18 +96,7 @@ app.get('/convert/*', (function(_this) {
                 logger.error(ex);
                 return res.send(400);
             }
-            return image.process(function(data, type) {
-                var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);
-                var jsonposted = [{
-                        "id":"561e19ebcd46a",
-                        "value":{"set":'caca'}
-                    }];
-                solr.postjson(jsonposted)
-                    .then( function(solrResponse){
-                       logger.info("post response :", solrResponse);
-                    });
-                    
-                    
+            return image.process(function(data, type) {                                    
                 res.set('Content-Type', type);
                 return res.send(data);
             },
