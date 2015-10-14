@@ -4,7 +4,6 @@ var imagemagick = require('imagemagick-native'),
     fs = require('fs'),
     exiv = require('./public/lib/exiv2/exiv2'),
     Solr = require('./solr'),
-    //exec = require('exec'),
     exec = require('child_process').exec,    
     sprintf = require('sprintf-js').sprintf,
     Q = require('q'),
@@ -146,17 +145,19 @@ Image = (function() {
             return deleteFile(self.pyr_path + '.tmp').then(function(){logger.info('deleted temp copy', self.pyr_path + '.tmp', 
                                                    "(" + self.path + ")")});          
             })    
-        /*return orig file*/   
+        /*return pyr file*/   
         .then(function() { 
             logger.info('delete tmp pyr tiff');            
-            return readFile(self.image); 
+            return readFile(self.pyr_path); 
             })        
         .then(function(data) { 
-            logger.info('read updated data from file', self.image, "(" + self.path + ")");
+            logger.info('read updated data from file', self.pyr_path, "(" + self.path + ")");
             self.imageData = data;
             deleteFile(self.image).then(function(){logger.info('deleted temp copy', self.image, 
                                                    "(" + self.path + ")")}); 
-            return done(self.imageData, self.type);            
+            //return done(self.imageData, self.type);
+            return done(self.imageData, 'image/tif');
+            
             })
         .catch(function (err) {
             /*catch and break on all errors or exceptions on all the above methods*/

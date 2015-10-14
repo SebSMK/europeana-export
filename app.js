@@ -4,7 +4,7 @@ var path = require('path'),
     fs = require('fs'),
     express = require('express'),
     Image = require('./image'),
-    MongoDB = require('./mongo'),
+    //MongoDB = require('./mongo'),
     config = require('./config'),
     SegfaultHandler = require('segfault-handler'),    
     app = express();
@@ -19,12 +19,13 @@ SegfaultHandler.registerHandler();
  * */
 app.get('/convert/*', (function(_this) {   
 
+/*
     // Connect to mongo (url to mongo is in config.js)    
     var mongodb = new MongoDB();
     mongodb.connect();
     mongodb.disconnect();
-    
-    return function(req, res) {
+  */  
+    var processed_image_stream = function(req, res) {
         var filePath, 
             resourcePath, 
             mode = req.param('mode') || 'noresize',
@@ -46,7 +47,7 @@ app.get('/convert/*', (function(_this) {
             /* We now support this form of request for the resource as well:
              * http://localhost:4000/globus/CORPUS%202015/KMS6111.jpg?mode=width&width=300
              */
-            resourcePath = decodeURIComponent(req.path)
+            resourcePath = decodeURIComponent(req.params[0]);            
             logger.info("resourcePath :", resourcePath);
         }
         filePath = path.join(config.root, resourcePath);
@@ -73,6 +74,8 @@ app.get('/convert/*', (function(_this) {
             });
         });
     };
+    
+    return processed_image_stream;
 })(this));
 
 logger.info("Serving images from " + config.root + " on port " + config.port);
