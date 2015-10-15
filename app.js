@@ -17,19 +17,20 @@ SegfaultHandler.registerHandler();
 
 app.get('/mongo', function(req, res){
     // Connect to mongo (url to mongo is in config.js)    
-    var mongodb = new MongoDB();
-    mongodb.connect();
-    var doc = [{a : 1}, {a : 2}, {a : 3}];    
-    /*
+    var mongodb = new MongoDB();    
+    var doc = [{a : 1}, {a : 2}, {a : 3}];        
+    var query = {};
+    var collection = 'collection';
+    
     mongodb.insertDocuments(doc, function() {
         logger.info('documents inserted');
     });
-    
-    mongodb.findDocuments(function() {
-        logger.info('documents found');
+
+    mongodb.findDocuments(query, collection, function(doc) {
+        console.log('documents found:');
+        console.log(JSON.stringify(doc));
     });
-      */
-    mongodb.disconnect();
+          
     res.send(200);
 });
 

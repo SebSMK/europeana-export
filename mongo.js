@@ -18,46 +18,53 @@ MongoDB = (function(){
     MongoDB.prototype.connect = function(){
       MongoClient.connect(this.url, function(err, db) {
         assert.equal(null, err);
-        logger.info("Connected correctly to server");      
+        console.log("Connected correctly to server");      
         this.db = db;
-        logger.info("Disconnected correctly from server"); 
+        console.log("Disconnected correctly from server"); 
         db.close();
       });
-    }
-
-    MongoDB.prototype.disconnect = function(){
-       if (this.db !== undefined){
-          this.db.close();
-          logger.info("Disconnected correctly from server"); 
-       }else{
-          logger.info("Not disconnected correctly");
-       }        
-    }
+    }    
     
     MongoDB.prototype.insertDocuments = function(doc, callback) {
-      // Get the documents collection 
-      var collection = this.db.collection('documents');
-      // Insert some documents 
-      collection.insert(doc, function(err, result) {
-        assert.equal(err, null);
-        assert.equal(3, result.result.n);
-        assert.equal(3, result.ops.length);
-        logger.info("Inserted documents into the document collection");
-        callback(result);
-      });
+       MongoClient.connect(this.url, function(err, db) {
+        assert.equal(null, err);
+        console.log("insertDocuments - Connected correctly to server");
+        console.log(doc);
+        // Get the documents collection 
+        var collection = db.collection('documents');
+        
+        // Insert some documents 
+        collection.insert(doc, function(err, result) {
+          console.log("insertDocuments - starting insert");
+          assert.equal(null, err);
+          console.log("insertDocuments - Connected correctly to server");
+          assert.equal(3, result.result.n);
+          assert.equal(3, result.ops.length);
+          console.log("Inserted documents into the document collection");
+          
+            db.close(); 
+            console.log("insertDocuments - Disconnected correctly from server");  
+          callback(result);
+        })      
+      });            
     }
     
-    MongoDB.prototype.findDocuments = function(callback) {
-      // Get the documents collection 
-      var collection = this.db.collection('documents');
-      // Find some documents 
-      collection.find({}).toArray(function(err, docs) {
-        assert.equal(err, null);
-        assert.equal(2, docs.length);
-        console.log("Found the following records");
-        console.dir(docs);
-        //callback(docs);
+    MongoDB.prototype.findDocuments = function(query, collection, callback) {
+      MongoClient.connect(this.url, function(err, db) {
+           // Get the documents collection 
+          var collection = db.collection(collection);
+          // Find some documents 
+          collection.find(query).toArray(function(err, docs) {
+            console.log("findDocuments - start reading");
+            console.log("Found the following records");
+            console.dir(JSON.stringify(docs));
+            db.close();
+            console.log("findDocuments - Disconnected correctly from server"); 
+            callback(docs);
+          });
+         
       });
+     
     }
     
     return MongoDB;
