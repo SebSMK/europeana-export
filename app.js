@@ -19,19 +19,23 @@ app.get('/mongo', function(req, res){
     // Connect to mongo (url to mongo is in config.js)    
     var mongodb = new MongoDB();    
     var doc = [{a : 1}, {a : 2}, {a : 3}];        
-    var query = {};
+    var query = {a : 1};
     var collection = 'collection';
     
-    mongodb.insertDocuments(doc, function() {
-        logger.info('documents inserted');
+    
+    mongodb.insertDocuments(doc, collection, function(data) {
+        console.log(data);
+    }, function(err) {
+        res.send(err);
     });
 
     mongodb.findDocuments(query, collection, function(doc) {
-        console.log('documents found:');
-        console.log(JSON.stringify(doc));
+        res.send(doc);
+    }, function(err) {
+        res.send(err);
     });
           
-    res.send(200);
+    //res.send(200);
 });
 
 app.get('/solr', function(req, res){

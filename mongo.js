@@ -2,6 +2,7 @@
 var MongoClient = require('mongodb').MongoClient, 
 assert = require('assert'),
 logger = require("./logging"),
+mp = require('mongodb-promise'),
 config = require('./config');
 
 
@@ -14,57 +15,49 @@ MongoDB = (function(){
         logger.info("instantiate Mongo", config.mongoURL);
         this.url = config.mongoURL;
     }
-
-    MongoDB.prototype.connect = function(){
-      MongoClient.connect(this.url, function(err, db) {
-        assert.equal(null, err);
-        console.log("Connected correctly to server");      
-        this.db = db;
-        console.log("Disconnected correctly from server"); 
-        db.close();
-      });
-    }    
+  
     
-    MongoDB.prototype.insertDocuments = function(doc, callback) {
-       MongoClient.connect(this.url, function(err, db) {
-        assert.equal(null, err);
-        console.log("insertDocuments - Connected correctly to server");
-        console.log(doc);
-        // Get the documents collection 
-        var collection = db.collection('documents');
-        
-        // Insert some documents 
-        collection.insert(doc, function(err, result) {
-          console.log("insertDocuments - starting insert");
-          assert.equal(null, err);
-          console.log("insertDocuments - Connected correctly to server");
-          assert.equal(3, result.result.n);
-          assert.equal(3, result.ops.length);
-          console.log("Inserted documents into the document collection");
-          
-            db.close(); 
-            console.log("insertDocuments - Disconnected correctly from server");  
-          callback(result);
-        })      
-      });            
+    MongoDB.prototype.insertDocuments = function(doc, collection, callback, error) {
+        mp.MongoClient.connect(this.url)
+            .then(function(db){
+                return db.collection(collection)
+                    .then(function(col) {
+                        return col.insert(doc)
+                            .then(function(result) {
+                                console.log('insertDocuments - result: ' + JSON.stringify(result));
+                                db.close().then(function(){
+                                     console.log('insertDocuments - success');
+                                     callback('insertDocuments - success: ' + JSON.stringify(result));
+                                });
+                                
+                            })
+                    })
+        })
+        .fail(function(err) {
+            console.log('insertDocuments err: ' + err);
+            error('insertDocuments err: ' + err);
+
+         });        
     }
     
-    MongoDB.prototype.findDocuments = function(query, collection, callback) {
-      MongoClient.connect(this.url, function(err, db) {
-           // Get the documents collection 
-          var collection = db.collection(collection);
-          // Find some documents 
-          collection.find(query).toArray(function(err, docs) {
-            console.log("findDocuments - start reading");
-            console.log("Found the following records");
-            console.dir(JSON.stringify(docs));
-            db.close();
-            console.log("findDocuments - Disconnected correctly from server"); 
-            callback(docs);
-          });
-         
-      });
-     
+    MongoDB.prototype.findDocuments = function(query, collection, callback, error) {
+        mp.MongoClient.connect(this.url)
+        .then(function(db){
+                return db.collection(collection)
+                    .then(function(col) {
+                        return col.find(query).toArray()
+                            .then(function(items) {
+                                console.log('findDocuments - result: ' + JSON.stringify(items));
+                                db.close().then(function(){
+                                     console.log('findDocuments - success');
+                                     callback('findDocuments - success: ' + JSON.stringify(items));
+                                });
+                            })
+                })
+        })
+        .fail(function(err) {
+            console.log('findDocuments err: ' + err);
+            error('insertDocuments err: ' + err);});
     }
     
     return MongoDB;
