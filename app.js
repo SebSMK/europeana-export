@@ -61,7 +61,7 @@ app.post('/mongodel', function(req, res){
 });
 
 
-app.post('/damedit', function(req, res){
+app.post('/solrdamedit', function(req, res){
     var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);
     var params = req.body;
     var jsonposted = Object.keys(params).length > 0 ? params : [{"id":"561e19ebcd46a", "value":{"set":'test'}}];

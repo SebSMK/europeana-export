@@ -1,0 +1,71 @@
+npm start (==> leaser package.json)
+
+debugging:
+(npm install node-inspector -g)
+
+cd c:\wamp32\www\node 
+start node --debug .\bin\www
+start node-inspector --save-live-edit true            
+
+cd /root/git/corpus-image-server/
+node --debug app.js
+node-inspector --save-live-edit true            
+mongod --dbpath=/data --port 27017
+http://172.20.1.203:8080/?ws=172.20.1.203:8080&port=5858
+
+curl '172.20.1.203:4000/post' -H 'Content-type:application/json' -d '{"id":"561e19ebcd46a", "value":{"set":"coco"}}'
+
+/*****
+** SOLR dev_DAM
+*****/
+
+*** EDIT VALUE
+given value
+curl '172.20.1.203:4000/solrdamedit' -H 'Content-type:application/json' -d '[{"id":"561e19ebcd46a", "value":{"set":"test2"}}]'
+modif test
+curl -X POST 172.20.1.203:4000/solrdamedit
+
+
+/*****
+** MONGO
+*****/
+
+*** ADD VALUE
+given value
+curl '172.20.1.203:4000/mongoadd' -H 'Content-type:application/json' -d '{"blob":"561e19ebcd46a"}'
+add test
+curl -X POST 172.20.1.203:4000/mongoadd
+
+*** DELETE VALUE
+curl '172.20.1.203:4000/mongodel' -H 'Content-type:application/json' -d '{"blob":"561e19ebcd46a"}'
+del test value
+curl -X POST 172.20.1.203:4000/mongodel
+
+172.20.1.203:4000/convert/Diverse arbejdsmateriale til udstillinger- IKKE DOK FOTO/udstillinger/tidslinie/er printet/KMS3123.tif
+http://csdev-seb-02:4000/convert/Dansk%20Kunst%20p%C3%A5%20Nettet/2009/low%20res/KMS8049.jpg
+
+
+Solr
+http://csdev-seb:8180/solr-example/#/dev_DAM/
+curl '172.20.1.159:8180/solr-example/dev_DAM/update/?commit=true' -H 'Content-type:application/json' -d '[{"id":"561e19ebcd46a", "value":{"set":"coco"}}]'
+curl '172.20.1.159:8180/solr-example/dev_DAM/update/?commit=true' -H "Content-Type: text/xml" -d "<delete><query>("id":"5617b64967400")</query></delete>"
+
+
+[
+    send i background:
+    
+    ctrl+Z
+    bg
+    
+    tilbage:  
+    fg
+    ((ps -af
+    kill xxx))
+]
+
+doc
+http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/#.Vh37wys9V8F
+
+
+fail:
+"Failed to open socket on port" -> ps ax |grep node
