@@ -11,17 +11,20 @@ var path = require('path'),
     Q = require('q'),   
     app = express();
 
-var version = '.008';
+var version = '.009';
 
 logger.debug("Overriding 'Express' logger");
 app.use(express.logger({format: 'dev', stream: logger.stream }));
+app.use(express.json());       // to support JSON-encoded bodies
+app.use(express.urlencoded()); // to support URL-encoded bodies
 
 SegfaultHandler.registerHandler();
 
-app.get('/mongo', function(req, res){
+app.post('/mongoadd', function(req, res){
     // Connect to mongo (url to mongo is in config.js)    
     var mongodb = new MongoDB();    
-    var doc = [{a : 1}, {a : 2}, {a : 3}];        
+    var params = req.body;
+    var doc = Object.keys(params).length > 0 ? params : [{a : 1}, {a : 2}, {a : 3}];            
     var query = {};
     var collection = 'collection';    
     
@@ -39,10 +42,11 @@ app.get('/mongo', function(req, res){
     });     
 });
 
-app.get('/reset', function(req, res){
+app.post('/mongodel', function(req, res){
     // Connect to mongo (url to mongo is in config.js)    
     var mongodb = new MongoDB();        
-    var query = {a: 2};
+    var params = req.body;
+    var query = Object.keys(params).length > 0 ? params : {a : 1};
     var collection = 'collection';    
     
     var display = mongodb.removeDocuments(query, collection)
@@ -56,23 +60,23 @@ app.get('/reset', function(req, res){
     });     
 });
 
-app.get('/solr', function(req, res){
+
+app.post('/damedit', function(req, res){
     var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);
-    var jsonposted = [{
-            "id":"561e19ebcd46a",
-            "value":{"set":'kiki'}
-        }];
+    var params = req.body;
+    var jsonposted = Object.keys(params).length > 0 ? params : [{"id":"561e19ebcd46a", "value":{"set":'test'}}];
+    
     solr.postjson(jsonposted)
         .then( function(solrResponse){
-           logger.info("post response :", solrResponse);
+           logger.info("solr post response :", solrResponse);
            res.send(solrResponse);
-        });
+        }).catch(function (err) {
+        /*catch and break on all errors or exceptions on all the above methods*/
+        logger.error('solr route', err);
+        res.send(version + '<br>Solr error: <br>' + err);
+    }); 
     
 });
-/*
-                
-                */    
-
 
 /**
  * GET image request
