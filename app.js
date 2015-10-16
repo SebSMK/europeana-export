@@ -7,8 +7,11 @@ var path = require('path'),
     MongoDB = require('./mongo'),
     config = require('./config'),
     SegfaultHandler = require('segfault-handler'), 
-    Solr = require('./solr'),   
+    Solr = require('./solr'),
+    Q = require('q'),   
     app = express();
+
+var version = '.008';
 
 logger.debug("Overriding 'Express' logger");
 app.use(express.logger({format: 'dev', stream: logger.stream }));
@@ -19,23 +22,38 @@ app.get('/mongo', function(req, res){
     // Connect to mongo (url to mongo is in config.js)    
     var mongodb = new MongoDB();    
     var doc = [{a : 1}, {a : 2}, {a : 3}];        
-    var query = {a : 1};
-    var collection = 'collection';
+    var query = {};
+    var collection = 'collection';    
     
-    
-    mongodb.insertDocuments(doc, collection, function(data) {
-        console.log(data);
-    }, function(err) {
-        res.send(err);
-    });
+    var display = mongodb.insertDocuments(doc, collection)
+    .then(function(data) {
+        return mongodb.findDocuments(query, collection);        
+    })
+    .then(function(data){
+        res.send(version + '<br>Result: <br>' + data);
+    })
+    .catch(function (err) {
+        /*catch and break on all errors or exceptions on all the above methods*/
+        logger.error('Mongo route', err);
+        res.send(version + '<br>Result: <br>' + err);
+    });     
+});
 
-    mongodb.findDocuments(query, collection, function(doc) {
-        res.send(doc);
-    }, function(err) {
-        res.send(err);
-    });
-          
-    //res.send(200);
+app.get('/reset', function(req, res){
+    // Connect to mongo (url to mongo is in config.js)    
+    var mongodb = new MongoDB();        
+    var query = {a: 2};
+    var collection = 'collection';    
+    
+    var display = mongodb.removeDocuments(query, collection)
+    .then(function(data){
+        res.send(version + '<br>Result: <br>' + data);
+    })
+    .catch(function (err) {
+        /*catch and break on all errors or exceptions on all the above methods*/
+        logger.error('Mongo reset route', err);
+        res.send(version + '<br>Result: <br>' + err);
+    });     
 });
 
 app.get('/solr', function(req, res){
