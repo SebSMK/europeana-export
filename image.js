@@ -20,20 +20,13 @@ Image = (function() {
     
     var solr = new Solr(config.solrHost, config.solrPort);
     var magic = new Magic(mmm.MAGIC_MIME_TYPE);
+    var type, path;
     
     /**
      * Constructor
      **/
-    function Image(path, width, height, scale, mode) {
-
-        if(mode !== 'width' && mode !== 'height' && mode !== 'scale' && mode !== 'noresize'){
-            throw new Error('The mode must be \'width\', \'height\' or \'scale\'');
-        }
+    function Image(path) {
         this.path = path;
-        this.width = width;
-        this.height = height;
-        this.scale = scale;
-        this.mode = mode;
     }
 
     /**
@@ -50,28 +43,15 @@ Image = (function() {
 
         logger.info('Image.prototype.convert:', this.mode);
 
-        if(this.mode === 'scale'){
-            cm = this.width / this.scale;
-            inches = cm * 0.39370;
-            width = inches * dpi;
-            logger.debug('scale :', this.scale);
-            logger.debug('inches :', inches, 'inches');
-            logger.debug('original width :', this.width, 'cm');
-            logger.debug('scaled width :', cm + ' cm (' + width + ' px)');
-        }else if (this.mode === 'width'){
-            width = this.width;
-            logger.debug('width :', this.width, 'px');
-        }else if (this.mode === 'height'){
-            height = this.height;
-            logger.debug('height :', this.height, 'px');
-        }else /* no resize */{
+        
             return imagemagick.convert({
                 srcData: this.imageData,
                 density: dpi,
-                format: type,
+//                format: type,
                 strip: true
             });
-        }
+        
+        /*
         return imagemagick.convert({
             srcData: this.imageData,
             width: width,
@@ -81,7 +61,7 @@ Image = (function() {
             resizeStyle: 'aspectfit',
             format: type,
             strip: true
-        });
+        });*/
     };
     
     Image.prototype.process = function(done, error) {

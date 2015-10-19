@@ -16,6 +16,17 @@ http://172.20.1.203:8080/?ws=172.20.1.203:8080&port=5858
 curl '172.20.1.203:4000/post' -H 'Content-type:application/json' -d '{"id":"561e19ebcd46a", "value":{"set":"coco"}}'
 
 /*****
+** convert to pyr dev_DAM
+*****/
+
+*** EDIT VALUE
+given value
+curl '172.20.1.203:4000/convert_pyr' -H 'Content-type:application/json' -d '[{"id":"561e19ebe67e3", "invnumber":"kms3123", "link":"Diverse arbejdsmateriale til udstillinger- IKKE DOK FOTO/udstillinger/tidslinie/er printet/KMS3123.tif"}]'
+modif test
+curl -X POST 172.20.1.203:4000/convert_pyr
+
+
+/*****
 ** SOLR dev_DAM
 *****/
 
