@@ -12,7 +12,7 @@ var path = require('path'),
     Q = require('q'),   
     app = express();
 
-var version = '000.001.002';
+var version = '000.001.003';
 
 logger.debug("Overriding 'Express' logger");
 app.use(express.logger({format: 'dev', stream: logger.stream }));
@@ -46,7 +46,7 @@ app.get('/imssrv/:id', function(req, res){
 app.post('/convert_pyr', (function(_this) {          
     var processed_image_stream = function(req, res) {
         var params = req.body;
-        var jsonposted = Object.keys(params).length > 0 ? params : [{"id":"561e19ebe67e3", "invnumber":"kms3123", "link":"Diverse arbejdsmateriale til udstillinger- IKKE DOK FOTO/udstillinger/tidslinie/er printet/KMS3123.tif"}];
+        var jsonposted = Object.keys(params).length > 0 ? params : [{"id":"561e19ec7fcca", "invnumber":"kms3123", "link":"Diverse arbejdsmateriale til udstillinger- IKKE DOK FOTO/udstillinger/tidslinie/er printet/KMS3123.tif"}];
         var filePath, 
             resourcePath, 
             solrid; 
@@ -75,20 +75,19 @@ app.post('/convert_pyr', (function(_this) {
                 return res.send(400);
             }
             return image.process(function(data, type) {                                    
-                /*
-                var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);                
-                var jsonposted = Object.keys(params).length > 0 ? params : [{"id":"561e19ebcd46a", "value":{"set":'test'}}];
                 
-                solr.postjson(jsonposted)
+                var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);                
+                var reqparams = [{"id":solrid, "value":{"set":data}}];
+                
+                solr.postjson(reqparams)
                     .then( function(solrResponse){
-                       logger.info("solr post response :", solrResponse);
-                       res.send(solrResponse);
+                       logger.info("solr dam response :", solrResponse);
+                       return res.send(version + '<br>' + JSON.stringify(solrResponse));
                     }).catch(function (err) {
                     /*catch and break on all errors or exceptions on all the above methods*/
-                    /*logger.error('solr route', err);
-                    res.send(version + '<br>Solr error: <br>' + err);
-                });*/               
-                return res.send(version + '<br>' + data);
+                    logger.error('solr dam', err);
+                    return res.send(version + '<br>Solr dam error: <br>' + err);
+                });                               
             },
             function(error) {
                 return res.status(500).send({error: error});
