@@ -12,7 +12,7 @@ var path = require('path'),
     Q = require('q'),   
     app = express();
 
-var version = '000.001.001';
+var version = '000.001.002';
 
 logger.debug("Overriding 'Express' logger");
 app.use(express.logger({format: 'dev', stream: logger.stream }));
@@ -43,19 +43,21 @@ app.get('/imssrv/:id', function(req, res){
 /**
  * GET image request
  * */
-app.post('/convert_pyr', function(req, res) {
+app.post('/convert_pyr', (function(_this) {          
+    var processed_image_stream = function(req, res) {
         var params = req.body;
         var jsonposted = Object.keys(params).length > 0 ? params : [{"id":"561e19ebe67e3", "invnumber":"kms3123", "link":"Diverse arbejdsmateriale til udstillinger- IKKE DOK FOTO/udstillinger/tidslinie/er printet/KMS3123.tif"}];
         var filePath, 
-            resourcePath,
+            resourcePath, 
             solrid; 
-                   
+           
+        
         /*check values for limits*/        
-        resourcePath = jsonposted[0].link;            
-        logger.info("resourcePath :", resourcePath);
-
         solrid = jsonposted[0].id;            
         logger.info("solrid :", solrid);
+        
+        resourcePath = jsonposted[0].link;            
+        logger.info("resourcePath :", resourcePath);
 
         filePath = path.join(config.root, resourcePath);
         logger.info("filePath name :", filePath);
@@ -72,17 +74,30 @@ app.post('/convert_pyr', function(req, res) {
                 logger.error(ex);
                 return res.send(400);
             }
-            return image.process(
-                function(pyrfilepath, type) {                                                        
-                    return res.send(pyrfilepath);
-                },
-                function(error) {
-                    return res.status(500).send({error: error});
-                }
-             );
+            return image.process(function(data, type) {                                    
+                /*
+                var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);                
+                var jsonposted = Object.keys(params).length > 0 ? params : [{"id":"561e19ebcd46a", "value":{"set":'test'}}];
+                
+                solr.postjson(jsonposted)
+                    .then( function(solrResponse){
+                       logger.info("solr post response :", solrResponse);
+                       res.send(solrResponse);
+                    }).catch(function (err) {
+                    /*catch and break on all errors or exceptions on all the above methods*/
+                    /*logger.error('solr route', err);
+                    res.send(version + '<br>Solr error: <br>' + err);
+                });*/               
+                return res.send(version + '<br>' + data);
+            },
+            function(error) {
+                return res.status(500).send({error: error});
+            });
         });
-    });
+    };
 
+    return processed_image_stream;
+})(this));
 
 app.post('/mongoadd', function(req, res){
     // Connect to mongo (url to mongo is in config.js)    
