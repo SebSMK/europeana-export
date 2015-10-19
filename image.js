@@ -20,13 +20,14 @@ Image = (function() {
     
     var solr = new Solr(config.solrHost, config.solrPort);
     var magic = new Magic(mmm.MAGIC_MIME_TYPE);
-    var type, path;
+    var type, path, solrid;
     
     /**
      * Constructor
      **/
-    function Image(path) {
+    function Image(path, solrid) {
         this.path = path;
+        this.solrid = solrid;
     }
 
     /**
@@ -67,7 +68,8 @@ Image = (function() {
     Image.prototype.process = function(done, error) {
 
         var self = this;
-        self.image = config.tempFilePath + guid() + '.image';
+        //self.image = config.tempFilePath + guid() + '.image';
+        self.image = config.tempFilePath + self.solrid + '.image';
     
         logger.info('Image.prototype.process: ' + JSON.stringify(this, null, 4));
 
@@ -113,7 +115,7 @@ Image = (function() {
             return readFile(self.image); 
             })        
         .then(function(data) {
-            self.pyr_path = config.tempFilePath + self.imageTags['Iptc.Application2.Headline'] + '_' + guid() + '_pyr.tif';          
+            self.pyr_path = config.tempFilePath + self.imageTags['Iptc.Application2.Headline'] + '_' + self.solrid + '_pyr.tif';          
             return writeFile(self.pyr_path + '.tmp', data); 
             })    
          .then(function() { 
@@ -122,10 +124,21 @@ Image = (function() {
             }) 
           .then(function(type) {              
             logger.info('create pyr tiff');            
-            return deleteFile(self.pyr_path + '.tmp').then(function(){logger.info('deleted temp copy', self.pyr_path + '.tmp', 
+            return deleteFile(self.pyr_path + '.tmp').then(function(){logger.info('deleted temp pyr copy', self.pyr_path + '.tmp', 
                                                    "(" + self.path + ")")});          
             })    
-        /*return pyr file*/   
+        /*return pyr file path*/   
+        .then(function() { 
+            logger.info('delete tmp pyr tiff'); 
+            deleteFile(self.image).then(function(){logger.info('deleted temp copy', self.image, 
+                                                   "(" + self.path + ")")});             
+            return done(self.pyr_path, 'image/tif');           
+            
+          })   
+
+
+         /*return pyr file*/   
+         /*
         .then(function() { 
             logger.info('delete tmp pyr tiff');            
             return readFile(self.pyr_path); 
@@ -139,6 +152,7 @@ Image = (function() {
             return done(self.imageData, 'image/tif');
             
             })
+            */
         .catch(function (err) {
             /*catch and break on all errors or exceptions on all the above methods*/
             logger.error('Image.prototype.process', err);

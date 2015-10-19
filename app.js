@@ -47,12 +47,15 @@ app.post('/convert_pyr', function(req, res) {
         var params = req.body;
         var jsonposted = Object.keys(params).length > 0 ? params : [{"id":"561e19ebe67e3", "invnumber":"kms3123", "link":"Diverse arbejdsmateriale til udstillinger- IKKE DOK FOTO/udstillinger/tidslinie/er printet/KMS3123.tif"}];
         var filePath, 
-            resourcePath; 
-           
-        
+            resourcePath,
+            solrid; 
+                   
         /*check values for limits*/        
         resourcePath = jsonposted[0].link;            
         logger.info("resourcePath :", resourcePath);
+
+        solrid = jsonposted[0].id;            
+        logger.info("solrid :", solrid);
 
         filePath = path.join(config.root, resourcePath);
         logger.info("filePath name :", filePath);
@@ -63,19 +66,20 @@ app.post('/convert_pyr', function(req, res) {
                 return res.send(404);
             }
             try{
-                image = new Image(filePath);
+                image = new Image(filePath, solrid);
             }
             catch(ex){
                 logger.error(ex);
                 return res.send(400);
             }
-            return image.process(function(data, type) {                                    
-                res.set('Content-Type', type);
-                return res.send(data);
-            },
-            function(error) {
-                return res.status(500).send({error: error});
-            });
+            return image.process(
+                function(pyrfilepath, type) {                                                        
+                    return res.send(pyrfilepath);
+                },
+                function(error) {
+                    return res.status(500).send({error: error});
+                }
+             );
         });
     });
 
