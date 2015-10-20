@@ -44,13 +44,22 @@ Image = (function() {
 
         logger.info('Image.prototype.convert:', this.mode);
 
-        
-            return imagemagick.convert({
+        var convertedfile;
+
+        try{
+            convertedfile = imagemagick.convert({
                 srcData: this.imageData,
                 density: dpi,
 //                format: type,
-                strip: true
+                strip: true,
+                ignoreWarnings: 1
             });
+            logger.error('Image.prototype.convert success: ');            
+        }catch(e){
+            logger.error('Image.prototype.convert FAILED: ' + e);            
+        }finally{
+            return convertedfile;    
+        }            
         
         /*
         return imagemagick.convert({
@@ -176,11 +185,12 @@ Image = (function() {
           function (error, stdout, stderr) {                        
             if (error !== null && error !== '') {
               logger.error('exec error: ' + error);
-              deferred.reject(error);
+              //deferred.reject(error);
             }else{
               logger.info('convertPyr Ok');
-              deferred.resolve('0');  
+              //deferred.resolve('0');  
             }
+            deferred.resolve('0');
         });
                 
         return deferred.promise;                

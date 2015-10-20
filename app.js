@@ -7,12 +7,13 @@ var path = require('path'),
     MongoDB = require('./mongo'),
     config = require('./config'),
     SegfaultHandler = require('segfault-handler'), 
-    Solr = require('./solr'),       
+    Solr = require('./solr'),
+    iipproxy = require('./iip'),       
     sprintf = require('sprintf-js').sprintf,  
     Q = require('q'),   
     app = express();
 
-var version = '000.001.003';
+var version = '000.001.007';
 
 logger.debug("Overriding 'Express' logger");
 app.use(express.logger({format: 'dev', stream: logger.stream }));
@@ -21,19 +22,28 @@ app.use(express.urlencoded()); // to support URL-encoded bodies
 
 SegfaultHandler.registerHandler();
 
-// get the image with the given id in SOLR_DAM
-app.get('/imssrv/:id', function(req, res){     
-    var solrPath = sprintf('%sselect?q=(id%%3A%s)&wt=json&fl=value', config.solrDAMCore, req.params.id); //'561e19ebe44bc'); 
+// get the image with the given fileid in SOLR_DAM
+app.get('/imgsrv/:fileid', function(req, res){     
+    var solrPath = sprintf('%sselect?q=(id%%3A%s)&wt=json&fl=value', config.solrDAMCore, req.params.fileid); //'561e19ebe44bc'); 
               
    // Create a client 
    var solr = new Solr(config.solrDAMHost, config.solrDAMPort); //, config.solrDAMCore);    
     
     solr.get(solrPath)
         .then( function(solrResponse){
-           var artwork = solrResponse.response.docs[0]; 
-           logger.info("solr post response :", solrResponse);
-           res.send(solrResponse);
-        }).catch(function (err) {
+           if(solrResponse.response.numFound == 1){
+             logger.info("solr post response :", solrResponse);
+             var filePath = solrResponse.response.docs[0].value; 
+             var iip = new iipproxy(config.IIPHost, config.IIPPath);
+             return iip.getImageByFilePath(filePath);             
+           }else{              
+             logger.info("solr post response - not unique ID - ERROR :", solrResponse);
+             return Q.defer().reject(solrResponse);                     
+           }                                 
+        }).then( function(imgstream){                
+                imgstream.pipe(res);                
+        })
+        .catch(function (err) {
           /*catch and break on all errors or exceptions on all the above methods*/
           logger.error('solr route', err);
           res.send(version + '<br>Solr error: <br>' + err);
@@ -201,9 +211,8 @@ app.get('/convert/*', (function(_this) {
                 logger.error(ex);
                 return res.send(400);
             }
-            return image.process(function(data, type) {                                    
-                res.set('Content-Type', type);
-                return res.send(data);
+            return image.process(function(source) {                                                    
+                return source.pipe(res);
             },
             function(error) {
                 return res.status(500).send({error: error});

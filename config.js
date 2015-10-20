@@ -22,6 +22,10 @@ var config = {
     solrDAMPort : 8180,
     solrDAMCore : '/solr-example/dev_DAM/',
 
+    // IIP
+    IIPHost : '172.20.1.203',
+    IIPPath : '/iipsrv/iipsrv.fcgi',
+
     // MongoDB
     mongoURL: 'mongodb://localhost:27017/DAM_PYR',
 
