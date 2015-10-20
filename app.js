@@ -23,7 +23,7 @@ app.use(express.urlencoded()); // to support URL-encoded bodies
 SegfaultHandler.registerHandler();
 
 // get the image with the given fileid in SOLR_DAM
-app.get('/imgsrv/:fileid', function(req, res){     
+app.get('/imgsrv/file/:fileid', function(req, res){     
     var solrPath = sprintf('%sselect?q=(id%%3A%s)&wt=json&fl=value', config.solrDAMCore, req.params.fileid); //'561e19ebe44bc'); 
               
    // Create a client 
@@ -49,6 +49,34 @@ app.get('/imgsrv/:fileid', function(req, res){
           res.send(version + '<br>Solr error: <br>' + err);
     });       
 });    
+
+app.get('/imgsrv/artwork/:refnumber', function(req, res){     
+    var solrPath = sprintf('%sselect?q=(invnumber%%3A%s)&sort=created+desc&wt=json&fl=value', config.solrDAMCore, req.params.refnumber); //'561e19ebe44bc'); 
+              
+   // Create a client 
+   var solr = new Solr(config.solrDAMHost, config.solrDAMPort); //, config.solrDAMCore);    
+    
+    solr.get(solrPath)
+        .then( function(solrResponse){
+           if(solrResponse.response.numFound > 0){
+             logger.info("solr post response :", solrResponse);
+             var filePath = solrResponse.response.docs[0].value; 
+             var iip = new iipproxy(config.IIPHost, config.IIPPath);
+             return iip.getImageByFilePath(filePath);             
+           }else{              
+             logger.info("solr post response - not unique ID - ERROR :", solrResponse);
+             return Q.defer().reject(solrResponse);                     
+           }                                 
+        }).then( function(imgstream){                
+                imgstream.pipe(res);                
+        })
+        .catch(function (err) {
+          /*catch and break on all errors or exceptions on all the above methods*/
+          logger.error('solr route', err);
+          res.send(version + '<br>Solr error: <br>' + err);
+    });       
+});    
+
 
 /**
  * GET image request
@@ -162,68 +190,8 @@ app.post('/solrdamedit', function(req, res){
         /*catch and break on all errors or exceptions on all the above methods*/
         logger.error('solr route', err);
         res.send(version + '<br>Solr error: <br>' + err);
-    }); 
-    
+    });     
 });
-
-/**
- * GET image request
- * */
-app.get('/convert/*', (function(_this) {      
-  
-    var processed_image_stream = function(req, res) {
-        var filePath, 
-            resourcePath, 
-            mode = req.param('mode') || 'noresize',
-            pic = req.param('pic'),
-            width = req.param('width') || 0,
-            height = req.param('height') || 0,
-            scale = req.param('scale') || 100;
-        
-        /*check values for limits*/
-        
-        if(pic){
-            /* For backwards compatability with the old cspic server api, the path can be
-             * set as an argument, like this:
-             * http://localhost:4000/?pic=globus/CORPUS%202015/KMS6111.jpg&mode=width&width=300
-             */
-            resourcePath = decodeURIComponent(pic);
-            logger.info("pic resourcePath :", resourcePath);
-        }else{
-            /* We now support this form of request for the resource as well:
-             * http://localhost:4000/globus/CORPUS%202015/KMS6111.jpg?mode=width&width=300
-             */
-            resourcePath = decodeURIComponent(req.params[0]);            
-            logger.info("resourcePath :", resourcePath);
-        }
-        filePath = path.join(config.root, resourcePath);
-        logger.info("filePath name :", filePath);
-        
-        return fs.exists(filePath, function(exists) {
-            var image;
-            if (!exists) {
-                return res.send(404);
-            }
-            try{
-                image = new Image(filePath, width, height, scale, mode);
-            }
-            catch(ex){
-                logger.error(ex);
-                return res.send(400);
-            }
-            return image.process(function(source) {                                                    
-                return source.pipe(res);
-            },
-            function(error) {
-                return res.status(500).send({error: error});
-            });
-        });
-    };
-    
-    
-    
-    return processed_image_stream;
-})(this));
 
 logger.info("Serving images from " + config.root + " on port " + config.port);
 
