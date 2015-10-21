@@ -44,7 +44,7 @@ Solr = (function() {
                     deferred.resolve(jsonData);
                 }else{
                     logger.error("Solr: empty GET result returned");
-                    deferred.reject();
+                    deferred.reject("Solr: empty GET result returned");
                 }
             });
             resp.on('error', function(err) {

@@ -21,7 +21,8 @@ curl '172.20.1.203:4000/post' -H 'Content-type:application/json' -d '{"id":"561e
 
 *** CONVERT IMAGE
 given value
-curl '172.20.1.203:4000/convert_pyr' -H 'Content-type:application/json' -d '[{"id":"561e19ebe44bc", "invnumber":"kms3123", "link":"Diverse/Google Art Project/KMS/KMS3123.jpg"}]'
+curl '172.20.1.203:4000/imgsrv/post' -H 'Content-type:application/json' -d '[{"id":"561e19ebd4ec1", "invnumber":"kms1", "link":"Diverse/B og U bog/KMS1.tif"}]'
+curl '172.20.1.203:4000/convert_pyr' -H 'Content-type:application/json' -d '[{"id":"561e19ebd4ec1", "invnumber":"kms3123", "link":"Diverse/Google Art Project/KMS/KMS3123.jpg"}]'
 curl '172.20.1.203:4000/convert_pyr' -H 'Content-type:application/json' -d '[{"id":"561e19ec7fcca", "invnumber":"kms3123", "link":"Diverse arbejdsmateriale til udstillinger- IKKE DOK FOTO/udstillinger/tidslinie/er printet/KMS3123.tif"}]'
 curl '172.20.1.203:4000/convert_pyr' -H 'Content-type:application/json' -d '[{"id":"561e19ebcd46a", "invnumber":"kms3123", "link":"Dansk Kunst pa Nettet/2010/Eckersberg 8bit cropped/KMS3123.tif"}]'
 curl '172.20.1.203:4000/convert_pyr' -H 'Content-type:application/json' -d '[{"id":"561e19ebe67e3", "invnumber":"kms3123", "link":"Diverse/Google Art Project/TIF ARTstor/KMS3123.tif"}]'
