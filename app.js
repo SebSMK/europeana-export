@@ -15,6 +15,7 @@ var path = require('path'),
 
 var route_index = require('./routes/index');
 var route_searching = require('./routes/searching');
+var route_imgsrv = require('./routes/imgsrv');
 
 var version = '000.001.008';
 
@@ -30,65 +31,10 @@ SegfaultHandler.registerHandler();
 
 app.use('/', route_index);
 app.use('/', route_searching);
-
-// get the image with the given fileid in SOLR_DAM
-app.get('/imgsrv/file/:fileid', function(req, res){     
-    var solrPath = sprintf('%sselect?q=(id%%3A%s)&wt=json&fl=value', config.solrDAMCore, req.params.fileid); //'561e19ebe44bc'); 
-              
-   // Create a client 
-   var solr = new Solr(config.solrDAMHost, config.solrDAMPort); //, config.solrDAMCore);    
-    
-    solr.get(solrPath)
-        .then( function(solrResponse){
-           if(solrResponse.response.numFound == 1){
-             logger.info("solr post response :", solrResponse);
-             var filePath = solrResponse.response.docs[0].value; 
-             var iip = new iipproxy(config.IIPHost, config.IIPPath);
-             return iip.getImageByFilePath(filePath);             
-           }else{              
-             logger.info("solr post response - not unique ID - ERROR :", solrResponse);
-             return Q.defer().reject(solrResponse);                     
-           }                                 
-        }).then( function(imgstream){                
-                imgstream.pipe(res);                
-        })
-        .catch(function (err) {
-          /*catch and break on all errors or exceptions on all the above methods*/
-          logger.error('solr route', err);
-          res.send(version + '<br>Solr error: <br>' + err);
-    });       
-});    
-
-app.get('/imgsrv/artwork/:refnumber', function(req, res){     
-    var solrPath = sprintf('%sselect?q=(invnumber%%3A%s)&sort=created+desc&wt=json&fl=value', config.solrDAMCore, req.params.refnumber); //'561e19ebe44bc'); 
-              
-   // Create a client 
-   var solr = new Solr(config.solrDAMHost, config.solrDAMPort); //, config.solrDAMCore);    
-    
-    solr.get(solrPath)
-        .then( function(solrResponse){
-           if(solrResponse.response.numFound > 0){
-             logger.info("solr post response :", solrResponse);
-             var filePath = solrResponse.response.docs[0].value; 
-             var iip = new iipproxy(config.IIPHost, config.IIPPath);
-             return iip.getImageByFilePath(filePath);             
-           }else{              
-             logger.info("solr post response - not unique ID - ERROR :", solrResponse);
-             return Q.defer().reject(solrResponse);                     
-           }                                 
-        }).then( function(imgstream){                
-                imgstream.pipe(res);                
-        })
-        .catch(function (err) {
-          /*catch and break on all errors or exceptions on all the above methods*/
-          logger.error('solr route', err);
-          res.send(version + '<br>Solr error: <br>' + err);
-    });       
-});    
-
+app.use('/', route_imgsrv);
 
 /**
- * GET image request
+ * convert image request
  * */
 app.post('/convert_pyr', (function(_this) {          
     var processed_image_stream = function(req, res) {
@@ -145,6 +91,10 @@ app.post('/convert_pyr', (function(_this) {
     return processed_image_stream;
 })(this));
 
+
+/***
+ *  DEV - NOT IN PROD
+ **/
 app.post('/mongoadd', function(req, res){
     // Connect to mongo (url to mongo is in config.js)    
     var mongodb = new MongoDB();    
