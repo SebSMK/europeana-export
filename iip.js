@@ -11,15 +11,18 @@ IIPProxy = (function(){
      /**
      * Constructor
      **/
-    function IIPProxy (host, path) {        
-        logger.info("IIPProxy Constructor", host + path);
+    function IIPProxy (host, path, imgsize) {        
+        logger.info("IIPProxy Constructor:", host + path);
+        logger.info("IIPProxy Constructor - image size:", imgsize);
         this.host = host;      
         this.path = path;
+        this.imgsize = imgsize;
     }
   
     
     IIPProxy.prototype.getImageByFilePath = function(filepath) {
-        var req = sprintf('FIF=%s&CVT=jpeg', filepath);
+        var wid = this.imgsize !== undefined ? sprintf('&WID=%s', this.imgsize) : '';
+        var req = sprintf('FIF=%s%s&CVT=jpeg', filepath, wid);
         var uri = sprintf('http://%s%s?%s', this.host, this.path, req);
         var deferred = Q.defer();
 

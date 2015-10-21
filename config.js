@@ -25,6 +25,11 @@ var config = {
     // IIP
     IIPHost : '172.20.1.203',
     IIPPath : '/iipsrv/iipsrv.fcgi',
+    IIPImageSize:{
+              thumb: 100,
+              medium: 200,
+              large: 500    
+    },
 
     // MongoDB
     mongoURL: 'mongodb://localhost:27017/DAM_PYR',
