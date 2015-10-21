@@ -1,0 +1,15 @@
+<script id="search-results" type="text/x-handlebars-template">
+  {{#each resultsArray}}
+    <li><a>{{invnumber}}</a>
+    <br>{{created}}
+    <br>{{link}}
+    <br>{{size}}
+    <br>{{type}}
+    <br>
+    <img src="http://csdev-seb-02:4000/imgsrv/file/{{id}}">
+    
+    </li>
+  {{/each}}
+  <br>
+  </ul>
+</script>
