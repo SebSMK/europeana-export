@@ -13,14 +13,23 @@ var path = require('path'),
     Q = require('q'),   
     app = express();
 
-var version = '000.001.007';
+var route_index = require('./routes/index');
+var route_searching = require('./routes/searching');
+
+var version = '000.001.008';
 
 logger.debug("Overriding 'Express' logger");
 app.use(express.logger({format: 'dev', stream: logger.stream }));
 app.use(express.json());       // to support JSON-encoded bodies
 app.use(express.urlencoded()); // to support URL-encoded bodies
+//uncomment after placing your favicon in /public
+//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 SegfaultHandler.registerHandler();
+
+app.use('/', route_index);
+app.use('/', route_searching);
 
 // get the image with the given fileid in SOLR_DAM
 app.get('/imgsrv/file/:fileid', function(req, res){     
