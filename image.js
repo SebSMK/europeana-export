@@ -74,6 +74,12 @@ Image = (function() {
         });*/
     };
     
+    Image.prototype.dummyprocess = function(done, error) {
+        setTimeout(function(){
+           return done('dummypath', 'image/tif'); 
+        }, 500);
+    }
+    
     Image.prototype.process = function(done, error) {
 
         var self = this;

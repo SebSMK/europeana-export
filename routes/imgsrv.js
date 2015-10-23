@@ -9,7 +9,8 @@ iipproxy = require('../iip'),
 sprintf = require('sprintf-js').sprintf,  
 Q = require('q'),
 fs = require('fs'),    
-Image = require('../image');
+Image = require('../image'),
+upath = require('upath');
 
 router.set('views', path.join(__dirname, '../views'));
 router.set('view engine', 'jade');
@@ -42,8 +43,8 @@ router.get('/imgsrv/get/:id/:size', function(req, res, next) {
              var iip = new iipproxy(config.IIPHost, config.IIPPath, imgsize);
              return iip.getImageByFilePath(pyrfilePath);             
            }else{              
-             logger.info("/imgsrv/get - image not found :", pyrfilePath);
-             return Q.defer().reject("/imgsrv/get - image not found : " + pyrfilePath);                     
+             logger.info("/imgsrv/get - image not found :", pyrfilePath);             
+             return res.status(404).send({error: "/imgsrv/get - image not found : " + pyrfilePath});                     
            }                                 
         }).then( function(imgstream){                
               imgstream.pipe(res);                
@@ -57,51 +58,80 @@ router.get('/imgsrv/get/:id/:size', function(req, res, next) {
 
 
 /***
- *  CONVERT IMAGE TO PYR
+ *  CONVERT IMAGE(S) OF A GIVEN REFERENCE IN SOLR DAM TO PYR
  *  @id: can be an artwork reference number or an unique image id  
  *  
  **/ 
-router.get('/imgsrv/post/:id', function(req, res) {
-   var solrPath = sprintf('%sselect?q=id%%3A%s+OR+invnumber%%3A%s&wt=json&fl=link,id,invnumber', config.solrDAMCore, req.params.id, req.params.id);    
-   var solr = new Solr(config.solrDAMHost, config.solrDAMPort);   
+
+router.get('/imgsrv/add/:id', function(req, res, next) {                
+    var promise = [];                     
+    var solrPath = sprintf('%sselect?q=id%%3A%s+OR+invnumber%%3A%s&wt=json&fl=link,id,invnumber', config.solrDAMCore, req.params.id, req.params.id);    
+    var solr = new Solr(config.solrDAMHost, config.solrDAMPort);   
+  
     
     solr.get(solrPath)
         .then( function(solrResponse){
+             var deferred = Q.defer();
+            // find artwork(s) in solrdam 
+             if(solrResponse.response.numFound > 0){                            
+               logger.info("/imgsrv/post - solr says:", solrResponse);
+               
+                // convert artwork(s)
+               for (i = 0; i < solrResponse.response.numFound; i++){
+                    var pyrconv = new converter(); 
+                    var params = {}, doc = solrResponse.response.docs[i];
+                    params.id = doc.id;
+                    params.link = pathConv2Unix(doc.link);
+                    params.invnumber = doc.invnumber;      
+                               
+                    promise.push(pyrconv.dummyexec(params));                            
+               };                 
+                                                          
+             }else{              
+               logger.info("/imgsrv/post - image not found :" + solrResponse);
+               deferred.reject({error: "/imgsrv/post - image not found : " + JSON.stringify(solrResponse)});                     
+             }          
+                                 
+             Q.allSettled(promise).then(function(result) {
+              //loop through array of promises, add items  
+              var tosend = []
+              result.forEach(function(res) { 
+                if (res.state === "fulfilled") {
+                  tosend.push(res.value);
+                }                
+                if (res.state === "rejected") {
+                  tosend.push(res.reason);
+                }                
+              });     
+              promise = []; //empty array, since it's global.
+              deferred.resolve(tosend);
+            }); 
             
-           if(solrResponse.response.numFound > 0){
-             var doc, filepath;             
-             logger.info("/imgsrv/post - solr says:", solrResponse);
-             
-             for (i = 0; i < solrResponse.response.numFound; i++) { 
-                filepath += solrResponse.response.docs[i].link;                
-             }                 
-             
-             return res.send(filepath);                                            
-           }else{              
-             logger.info("/imgsrv/post - image not found :", filePath);
-             return Q.defer().reject("/imgsrv/post - image not found : " + filePath);                     
-           }                                
+            return deferred.promise;
+                
+        }).then(function(tosend){
+            res.send(tosend);        
         })
         .catch(function (err){
           //catch and break on all errors or exceptions on all the above methods
           logger.error('/imgsrv/post', err);          
           return res.status(500).send({error: err});
-        });  
-}); 
-
+        });     
+});
 
 /***
- *  CONVERT IMAGE TO PYR
+ *  CONVERT POSTED DATA TO PYR IMAGES
  *  @id: unique id for original image in Solr DAM
  *  @invnumber: inventar number of the image
  *  @link: link to original image
  *  
  **/ 
 
-router.post('/imgsrv/post', function(req, res) {
+router.post('/imgsrv/add', function(req, res) {
     var params = req.body; 
-    var conv = new converter();
-    conv.exec(params)
+    var pyrconv = new converter();
+    
+    pyrconv.exec(params)
     .then(function(response){
         return res.send(response);
     }) 
@@ -109,65 +139,17 @@ router.post('/imgsrv/post', function(req, res) {
       //catch and break on all errors or exceptions on all the above methods
       logger.error('/imgsrv/post', err);
       return res.status(500).send({error: err});
-    });     
-    
+    });         
 });
 
-/*
-router.post('/imgsrv/post', function(req, res) {
-    var params = req.body;        
-    var filePath, 
-        resourcePath, 
-        solrid, 
-        invnumber; 
-                           
-    //check params                      
-    solrid = params.id;            
-    logger.info("solrid :", solrid);
-    
-    invnumber = params.invnumber;            
-    logger.info("invnumber :", invnumber);
-    
-    resourcePath = params.link;            
-    logger.info("resourcePath :", resourcePath);
 
-    filePath = path.join(config.root, resourcePath);
-    logger.info("filePath name :", filePath);
-    
-    return fs.exists(filePath, function(exists) {
-        var image;
-        if (!exists) {
-            return res.send(404);
-        }
-        try{
-            image = new Image(filePath, solrid);
-        }
-        catch(ex){
-            logger.error(ex);
-            return res.send(400);
-        }
-        return image.process(function(data, type) {                                    
-            
-            var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);                
-            var reqparams = [{"id": solrid, "value":{"set": data}}];
-            
-            solr.postjson(reqparams)
-              .then( function(solrResponse){
-                 logger.info("/imgsrv/post - solr dam response :", solrResponse);
-                 return res.send(sprintf("/imgsrv/post - pyr image created - %s - %s - %s", invnumber, solrid, data));
-              })
-              .catch(function (err) {
-                  //catch and break on all errors or exceptions on all the above methods
-                  logger.error('/imgsrv/post', err);
-                  return res.send('/imgsrv/post error: <br>' + err);
-              });                               
-        },
-        function(error) {
-            return res.status(500).send({error: error});
-        });
-    });
-});
-
-*/
+/***
+ *  PRIVATE FUNCTIONS
+ **/
+ 
+function pathConv2Unix(windowsPath){
+  var unixPath = upath.toUnix(windowsPath);
+  return unixPath.replace('F:/FotoII/', '');  
+};
 
 module.exports = router;
