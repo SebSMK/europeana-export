@@ -16,8 +16,9 @@ var path = require('path'),
 var route_index = require('./routes/index');
 var route_searching = require('./routes/searching');
 var route_imgsrv = require('./routes/imgsrv');
+var route_test = require('./routes/test');
 
-var version = '000.001.008';
+var version = config.version;
 
 logger.debug("Overriding 'Express' logger");
 app.use(express.logger({format: 'dev', stream: logger.stream }));
@@ -32,6 +33,7 @@ SegfaultHandler.registerHandler();
 app.use('/', route_index);
 app.use('/', route_searching);
 app.use('/', route_imgsrv);
+app.use('/', route_test);
 
 /**
  * convert image request
@@ -155,5 +157,54 @@ app.post('/solrdamedit', function(req, res){
 logger.info("Serving images from " + config.root + " on port " + config.port);
 
 /*app.listen() is a convenience method for creating the server*/
-app.listen(config.port);
+//app.listen(config.port);
+
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+
+/*
+io.on('connection', function(socket){
+  console.log('io connected');
+  socket.emit('message', { message: 'welcome to the chat2' });
+  socket.on('send', function (data) {
+      io.sockets.emit('message', { message: 'welcome to test' });
+  });
+  
+});
+*/
+
+
+var routes_test_emit = require('./routes/test_emit')(app, io);
+//app.use('/', routes_test_emit);
+
+
+
+app.set('views', path.join(__dirname, './views'));
+app.set('view engine', 'jade');
+
+app.get('/test', 
+  // loading interface and socket IO before proceeding with the route
+  function(req, res, next) {             
+       res.render('chat');  
+        io.on('connection', function(socket){
+          console.log('io connected');
+          socket.emit('message', { message: 'welcome to the chat6' });   
+          io.sockets.emit('message', { message: 'welcome to test!' });        
+          socket.on('send', function (data) {
+              io.sockets.emit('message', { message: data });
+          });
+          
+          console.log('Timos: ', Date.now());
+          next();        
+    });               
+  },
+  function(req, res, next) {     
+       io.sockets.emit('message', { message: 'youhou' });       
+  });
+
+
+http.listen(config.port, function(){
+  console.log('listening on *:' + config.port);
+});
+
 
