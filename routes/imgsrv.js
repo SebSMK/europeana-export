@@ -62,7 +62,7 @@ router.get('/imgsrv/get/:id/:size', function(req, res, next) {
  *  @id: can be an artwork reference number or an unique image id  
  *  
  **/ 
-
+/*
 router.get('/imgsrv/add/:id', function(req, res, next) {                
     var promise = [];                     
     var solrPath = sprintf('%sselect?q=id%%3A%s+OR+invnumber%%3A%s&wt=json&fl=link,id,invnumber', config.solrDAMCore, req.params.id, req.params.id);    
@@ -118,7 +118,8 @@ router.get('/imgsrv/add/:id', function(req, res, next) {
           return res.status(500).send({error: err});
         });     
 });
-
+ */
+ 
 /***
  *  CONVERT POSTED DATA TO PYR IMAGES
  *  @id: unique id for original image in Solr DAM
@@ -126,6 +127,7 @@ router.get('/imgsrv/add/:id', function(req, res, next) {
  *  @link: link to original image
  *  
  **/ 
+
 
 router.post('/imgsrv/add', function(req, res) {
     var params = req.body; 

@@ -64,7 +64,7 @@ module.exports = function(router, io) {
                         sendInterfaceMessage(sprintf("** start processing - %s - %s %s", params.invnumber, params.id, params.link ));                                                                                  
                         
                         promise.push(
-                         pyrconv.exec(params)
+                         pyrconv.dummyexec(params)
                           .then(
                             function(result){
                               sendInterfaceMessage(sprintf("processed - %s **", result ));

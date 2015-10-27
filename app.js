@@ -13,6 +13,10 @@ var path = require('path'),
     Q = require('q'),   
     app = express();
 
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+
+var route_imgsrv_add = require('./routes/imgsrv_add')(app, io);
 var route_index = require('./routes/index');
 var route_searching = require('./routes/searching');
 var route_imgsrv = require('./routes/imgsrv');
@@ -158,50 +162,6 @@ logger.info("Serving images from " + config.root + " on port " + config.port);
 
 /*app.listen() is a convenience method for creating the server*/
 //app.listen(config.port);
-
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-
-/*
-io.on('connection', function(socket){
-  console.log('io connected');
-  socket.emit('message', { message: 'welcome to the chat2' });
-  socket.on('send', function (data) {
-      io.sockets.emit('message', { message: 'welcome to test' });
-  });
-  
-});
-*/
-
-
-var routes_test_emit = require('./routes/test_emit')(app, io);
-//app.use('/', routes_test_emit);
-
-
-
-app.set('views', path.join(__dirname, './views'));
-app.set('view engine', 'jade');
-
-app.get('/test', 
-  // loading interface and socket IO before proceeding with the route
-  function(req, res, next) {             
-       res.render('chat');  
-        io.on('connection', function(socket){
-          console.log('io connected');
-          socket.emit('message', { message: 'welcome to the chat6' });   
-          io.sockets.emit('message', { message: 'welcome to test!' });        
-          socket.on('send', function (data) {
-              io.sockets.emit('message', { message: data });
-          });
-          
-          console.log('Timos: ', Date.now());
-          next();        
-    });               
-  },
-  function(req, res, next) {     
-       io.sockets.emit('message', { message: 'youhou' });       
-  });
-
 
 http.listen(config.port, function(){
   console.log('listening on *:' + config.port);
