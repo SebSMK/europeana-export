@@ -17,15 +17,18 @@ module.exports = function(router, io) {
   router.set('views', path.join(__dirname, '../views'));
   router.set('view engine', 'jade');
 
-   router.get('/test/emit/:id', 
+   router.get('/test/add/:id', 
     // loading interface and socket IO before proceeding with the route...
       function(req, res, next) {             
            res.render('chat');  
             io.on('connection', function(socket){
-              console.log('io connected');
-              socket.emit('message', { message: 'welcome to import console ' + config.version});                                            
+              console.log('io connected');                                                          
               next();        
         });               
+      },
+      function(req, res, next) {             
+          io.sockets.emit('message', { message: 'welcome to import console ' + config.version});                                            
+          next();                               
       },
       // ...real stuff starting here
       function(req, res, next) {
@@ -52,10 +55,24 @@ module.exports = function(router, io) {
                         params.id = doc.id;
                         params.link = pathConv2Unix(doc.link);
                         params.invnumber = doc.invnumber;      
-                                   
-                        promise.push(pyrconv.exec(params)); 
                         
-                        sendInterfaceMessage(sprintf("PROCESSED - %s - %s %s", params.invnumber, params.id, params.link ));                           
+                        var log = function(){
+                            sendInterfaceMessage(sprintf("** start processing - %s - %s %s", params.invnumber, params.id, params.link ));
+                            return Q.defer().resolve('kok');
+                        }
+                                                
+                        sendInterfaceMessage(sprintf("** start processing - %s - %s %s", params.invnumber, params.id, params.link ));                                                                                  
+                        
+                        promise.push(
+                         pyrconv.exec(params)
+                          .then(
+                            function(result){
+                              sendInterfaceMessage(sprintf("processed - %s **", result ));
+                            },
+                            function(err){
+                              sendInterfaceMessage(sprintf("processing ERROR - %s **", err ));
+                            })                          
+                        );                                                                                                       
                    };                 
                                                               
                  }else{              
@@ -85,12 +102,12 @@ module.exports = function(router, io) {
             .then(
               // processing output
               function(tosend){
-                  sendInterfaceMessage('******** processed done //////////');
+                  sendInterfaceMessage('******** processing done //////////');
                   res.end();
             },
             function(error){
                   sendInterfaceMessage('ERROR -- ' + JSON.stringify(error));
-                  sendInterfaceMessage('******** processed done //////////');
+                  sendInterfaceMessage('******** processing done //////////');
             })
             .catch(function (err){
               //catch and break on all errors or exceptions on all the above methods

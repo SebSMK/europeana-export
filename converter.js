@@ -43,14 +43,15 @@ Converter = (function() {
         fs.exists(filePath, function(exists) {
             var image;
             if (!exists) {
-                deferred.reject(404);
+                deferred.reject(sprintf('ERROR - %s not found', filePath));
             }
             try{
+                logger.info("Converter processing :", filePath);
                 image = new Image(filePath, solrid);
             }
             catch(ex){
                 logger.error(ex);
-                deferred.reject(400);;
+                deferred.reject(400);
             }
             return image.process(function(data, type) {                                    
                 
@@ -102,6 +103,7 @@ Converter = (function() {
                 deferred.reject(404);
             }
             try{
+                logger.info("Converter processing :", filePath);
                 image = new Image(filePath, solrid);
             }
             catch(ex){
