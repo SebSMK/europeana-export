@@ -1,7 +1,7 @@
 
 var config = {
 
-    version :  '000.001.029',
+    version :  '000.001.032',
     
     // Metadata values
     attribution : "SMK Photo/Skou-Hansen/Buccarella", /*max 32 bytes!*/
