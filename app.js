@@ -17,6 +17,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 var route_imgsrv_add = require('./routes/imgsrv_add')(app, io);
+var route_imgsrv_add_test = require('./routes/test_add')(app, io);
 var route_index = require('./routes/index');
 var route_searching = require('./routes/searching');
 var route_imgsrv = require('./routes/imgsrv');
