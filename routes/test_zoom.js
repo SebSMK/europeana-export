@@ -21,40 +21,21 @@ module.exports = function(router, io) {
   router.set('view engine', 'jade');
   //router.set(express.static(path.join(__dirname, 'public')));
 
-router.use('/iipsrv/iipsrv.fcgi', proxy(url.parse('http://172.20.1.203/iipsrv/iipsrv.fcgi')));
+//* proxying calls to IIP server
+router.use(config.IIPPath, proxy(url.parse(sprintf('http://%s%s', config.IIPHost,config.IIPPath))));
 
-
-router.get('/imgsrv/test/zoom/:id', 
-    // loading interface and socket IO before proceeding with the route...
-      /*
-      function(req, res, next) {             
-           
-           res.render('chat');  
-            io.on('connection', function(socket){
-              console.log('zoom io connected');                                                          
-              next();        
-        });               
-      },*/
-      /*
-      function(req, res, next) {             
-          //res.header('Access-Control-Allow-Origin', 'http://172.20.1.203');
-          res.header("Access-Control-Allow-Origin", "*");
-          res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-          res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE, OPTION");           
-          next();            
-      },*/
-      
-      function(req, res, next) {             
-          io.sockets.emit('message', { message: 'starting get console ' + config.version});                                            
+router.get('/imgsrv/test/zoom/:id',           
+      function(req, res, next) {    
+      //* loading socket IO 
+          io.sockets.emit('message', { message: 'starting get console ' + config.version}); 
+          io.sockets.emit('message', { message: 'iipserver: ' + JSON.stringify(sprintf('http://%s%s', config.IIPHost,config.IIPPath))});                                            
           next();                               
       },
       
       function(req, res, next) {
-          
+      //* checking if IIP server is available          
           sendInterfaceMessage('message', { message: 'starting request '});
           request('http://172.20.1.203/iipsrv/iipsrv.fcgi', function (error, response, body) {
-          //request('http://192.168.10.17/iipsrv/iipsrv.fcgi?FIF=/var/www/fcgi-images-original/KMSsp720_256_pyr.tif&obj=IIP,1.0&obj=Max-size&obj=Tile-size&obj=Resolution-number', function (error, response, body) {
-          //request('http://172.20.1.203/iipsrv/iipsrv.fcgi?FIF=/tmp/KMS3366_5637623197124_pyr.tif&obj=IIP,1.0&obj=Max-size&obj=Tile-size&obj=Resolution-number', function (error, response, body) {          
               if (!error && response.statusCode == 200) {
                   sendInterfaceMessage('message' + body); // Show the HTML for the Modulus homepage.
               }else{
@@ -65,24 +46,10 @@ router.get('/imgsrv/test/zoom/:id',
               
               next(); 
           });                                                     
-      },
-      /*
-      function(req, res, next) {
-          
-          sendInterfaceMessage('message', { message: 'starting highres_srv '});
-          request('http://192.168.10.17/highres_srv/', function (error, response, body) {
-              if (!error && response.statusCode == 200) {
-                  res.send(body); // Show the HTML for the Modulus homepage.
-              }else{
-                  sendInterfaceMessage('iip highres_srv FAILED: ' + error);
-              }
-              
-              sendInterfaceMessage('iip highres_srv end: ' + error);                            
-          });                                                     
-      },*/            
+      },           
       // ...real stuff starting here
       function(req, res, next) {        
-        sendInterfaceMessage('//////// start get *******');                        
+        sendInterfaceMessage('//////// start zooming *******');                        
         res.sendfile('views/zoom.html'); 
   });
 
