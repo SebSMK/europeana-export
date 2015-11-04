@@ -1,0 +1,43 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/iip/iip.min.css')
+    link(rel='stylesheet', href='/stylesheets/iip/smk.css')
+    
+    link(rel='shortcut icon', href='/images/smk-favicon.png')
+    link(rel='apple-touch-icon', href='/images/smk.png')
+    
+    style(type='text/css').
+      body{
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+      div#viewer{
+        height: 100%;
+        min-height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        margin: 0;
+        padding: 0;
+      }
+     
+    script(src="/javascripts/iip/mootools-core-1.5.1-full-nocompat-yc.js")
+    script(src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js")
+    script(src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js")
+    script(src="/javascripts/iip/smk-iipmooviewer-2.1-compressed.js")
+    script(src="/javascripts/iip/adapt.min.js")  
+  
+  
+  body       
+    div#viewer
+    script.
+      var image = "#{path}";
+      var server = "#{IIPServerPath}"; 
+      
+    script(src="/javascripts/iip/zoom.js")
+    
+    
