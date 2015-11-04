@@ -1,0 +1,19 @@
+@charset "UTF-8";
+
+
+.tool-img-zoom a {
+    background-color: transparent;
+    background-image: url("../images/icon-zoomin.png");
+    background-repeat: no-repeat;    
+    height: 14px;  
+    opacity: 0.4;    
+    vertical-align: middle;
+    width: 14px;
+}
+.tombstone #objectbanner .toolset li.tool-img-zoom{display:none}
+@media all and (min-width:480px){.tombstone #objectbanner .banner-left,.tombstone #objectbanner .banner-right{width:50%;float:left}
+.tombstone #objectbanner .toolset{text-align:left}
+}
+.tombstone #objectbanner .mainImg:not([data-zoom=""]),.tombstone #objectbanner .tool-img-zoom{cursor:zoom-in;cursor:-webkit-zoom-in}
+.tombstone #objectbanner .toolset li.tool-img-zoom{display:inline-block}
+

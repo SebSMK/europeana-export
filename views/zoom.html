@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+ <head>
+  <meta charset="utf-8" />
+  <meta name="DC.creator" content="Ruven Pillay &lt;ruven@users.sourceforge.netm&gt;"/>
+  <meta name="DC.title" content="IIPMooViewer 2.0: HTML5 High Resolution Image Viewer"/>
+  <meta name="DC.subject" content="IIPMooViewer; IIPImage; Visualization; HTML5; Ajax; High Resolution; Internet Imaging Protocol; IIP"/>
+  <meta name="DC.description" content="IIPMooViewer is an advanced javascript HTML5 image viewer for streaming high resolution scientific images"/>
+  <meta name="DC.rights" content="Copyright &copy; 2003-2012 Ruven Pillay"/>
+  <meta name="DC.source" content="http://iipimage.sourceforge.net"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta http-equiv="X-UA-Compatible" content="IE=9" />
+
+  <link rel="stylesheet" type="text/css" media="all" href="/stylesheets/iip/iip.min.css" />
+  <link rel="stylesheet" type="text/css" media="all" href="/stylesheets/iip/smk.css" />
+  
+  
+<!--[if lt IE 10]>
+  <meta http-equiv="X-UA-Compatible" content="IE=9" >
+  <link rel="stylesheet" type="text/css" media="all" href="css/ie.min.css" />
+<![endif]-->
+
+  <!-- Basic example style for a 100% view -->
+  <style type="text/css">
+    body{
+      height: 100%;
+      padding: 0;
+      margin: 0;
+    }
+    div#viewer{
+      height: 100%;
+      min-height: 100%;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      margin: 0;
+      padding: 0;
+    }	
+  </style>
+
+  <link rel="shortcut icon" href="/images/smk-favicon.png" />
+  <link rel="apple-touch-icon" href="/images/smk.png" />
+
+  <title>SMK | Lucas Den &aelig;ldre  - Martin Luther</title>  
+
+  <script type="text/javascript" src="/javascripts/iip/mootools-core-1.5.1-full-nocompat-yc.js"></script>
+  
+    
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+  <script>var $jq = jQuery.noConflict();</script>
+  
+  <script type="text/javascript" src="/javascripts/iip/smk-iipmooviewer-2.1-compressed.js"></script>
+
+  
+ 
+  
+  <script>
+  var ADAPT_CONFIG = {
+  // Where is your CSS?
+  path: '/stylesheets/iip/',
+
+  // false = Only run once, when page first loads.
+  // true = Change on window resize and page tilt.
+  dynamic: true,
+ 
+  // First range entry is the minimum.
+  // Last range entry is the maximum.
+  // Separate ranges by "to" keyword.
+  range: [    
+    '0px  to 980px  = 720.css',
+    '980px  to 1580px = 960.css',
+    '1580px  = 1200.css'    
+  ]
+};
+  </script>
+  
+   <script type="text/javascript" src="/javascripts/iip/adapt.min.js"></script>
+  
+<!--[if lt IE 7]>
+  <script src="http://ie7-js.googlecode.com/svn/version/2.1(beta4)/IE7.js">IE7_PNG_SUFFIX = ".png";</script>
+<![endif]-->
+
+ 
+
+ </head>
+
+ <body>
+  <div id="lang">    
+  <ul class="language-selector">
+			<li class="active"><a href="#">Dansk</a></li>
+			<li>/</li>
+			<li class=""><a href="en">English</a></li>
+		</ul>		               
+  </div>  
+   <div id="viewer"></div>
+ </body>
+ 
+  <script type="text/javascript">
+
+    // IIPMooViewer options: See documentation at http://iipimage.sourceforge.net for more details
+    // Server path: set if not using default path
+    var image = '/tmp/KMS3366_5637623197124_pyr.tif';
+    //var image = '/var/www/fcgi-images-original/KMSsp720_256_pyr.tif';
+    var server = '/iipsrv/iipsrv.fcgi'; //'/iipsrv/iipsrv.fcgi';
+    //var server = 'http://192.168.10.17/iipsrv/iipsrv.fcgi';
+                                                                                                                                                                                                              
+    // Copyright or information message    
+    var credit = "G&aring; p&aring; opdagelse i v&aelig;rket: Zoom ind og find de skjulte detaljer!<p><i>h&oslash;jreklik for mere information om zoom funktionalitet.</i></p>";
+
+
+   // Create our viewer object
+    // See documentation for more details of options
+    new IIPMooViewer( "viewer", {
+
+  
+  	image: image,
+		server: server,
+		credit: credit, 
+		scale: 7.17,
+		showNavWindow: false,
+		showNavButtons: true,
+		winResize: true,
+		protocol: 'iip',
+//	  annotations: annotations,
+    navWinSize : 0.07     
+  
+    });
+
+  </script>
+
+</html>

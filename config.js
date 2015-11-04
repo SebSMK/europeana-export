@@ -1,7 +1,7 @@
 
 var config = {
 
-    version :  '000.001.032',
+    version :  '000.001.033',
     
     // Metadata values
     attribution : "SMK Photo/Skou-Hansen/Buccarella", /*max 32 bytes!*/
@@ -40,7 +40,11 @@ var config = {
     originalCopyright : 'Iptc.Application2.Copyright',
     tempFilePath : '/tmp/',
     root : '/mnt/fotoII/',
-    port : 4000
+    port : 4000,
+    
+    // imageMagick
+    maxFileSize:  370000000
+    
 }
 
 module.exports = config;

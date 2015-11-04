@@ -1,0 +1,17 @@
+@charset "UTF-8";#img-comparator-cover{height:100%;width:100%;position:fixed;top:0;left:0;margin:0;padding:0;background-color:#000;opacity:.2;filter:alpha(opacity=20);z-index:10000}
+#img-comparator-viewer{min-width:1024px;height:95%;width:95%;position:fixed;top:2%;right:2%;padding:0;border:1px solid #555;background-color:white;z-index:10001}
+@media screen and (max-width:1060px){#img-comparator-viewer{top:0;right:0;height:100%;width:100%}
+}
+#img-comparator-viewer iframe{height:100%;width:100%;top:0;left:0;margin:0;padding:0;overflow:hidden}
+#img-comparator-viewer .close-icon{position:absolute;top:11px;right:22px;cursor:pointer;background-color:#cecece;height:22px;width:22px;border-radius:22px;-moz-border-radius:22px;-webkit-border-radius:22px}
+@charset "UTF-8";@charset "UTF-8";.slideshow-slide{margin:10px;border-bottom:1px solid #ccc;padding-bottom:10px}
+.slideshow-slide .slideshow-image-box img{max-height:150px;max-width:150px}
+.slideshow-image-box{width:150px;height:150px;float:left;margin-right:10px;border:2px solid #ddd;padding:3px}
+.slideshow-description{color:#333;font-family:"proxima-nova-n4","proxima-nova",Arial,sans-serif;font-size:11px;line-height:18px;margin-bottom:10px}
+.slideshow-description em{display:block;color:#000;font-family:"proxima-nova-i7","proxima-nova",Arial,sans-serif;font-weight:700}
+.slideshow-caption{color:#666;font-family:"proxima-nova-n4","proxima-nova",Arial,sans-serif;font-size:11px;line-height:18px;margin-bottom:10px}
+.slideshow-caption em{display:block;color:#000;font-family:"proxima-nova-i7","proxima-nova",Arial,sans-serif;font-weight:700}
+.slideshow-blank-slide{margin:10px;border:1px solid #ccc;padding:80px;font-size:12px;font-family:"proxima-nova-n7","proxima-nova",Arial,sans-serif;font-weight:bold;color:#666;text-align:center}
+.ui-menu-item a.ui-corner-all{font-size:.7em}
+.prdTxtNoMtch{font-size:12px;color:#933737;background-color:#f2dede;border:1px solid #933737;vertical-align:baseline;margin:0 6px;-webkit-border-radius:2px;-moz-border-radius:2px;border-radius:2px;padding:9px 11px}
+div .noResults{padding:36px;text-align:center}

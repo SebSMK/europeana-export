@@ -19,6 +19,9 @@ curl '172.20.1.203:4000/post' -H 'Content-type:application/json' -d '{"id":"561e
 ** convert to pyr dev_DAM
 *****/
 
+**** magick
+
+
 *** CONVERT IMAGE
 given value
 curl '172.20.1.203:4000/imgsrv/post' -H 'Content-type:application/json' -d '[{"id":"561e19ebd4ec1", "invnumber":"kms1", "link":"Diverse/B og U bog/KMS1.tif"}]'

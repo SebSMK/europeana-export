@@ -16,8 +16,10 @@ var path = require('path'),
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
+
 var route_imgsrv_add = require('./routes/imgsrv_add')(app, io);
 var route_imgsrv_add_test = require('./routes/test_add')(app, io);
+var route_imgsrv_get_test = require('./routes/test_zoom')(app, io);
 var route_index = require('./routes/index');
 var route_searching = require('./routes/searching');
 var route_imgsrv = require('./routes/imgsrv');
@@ -26,6 +28,8 @@ var route_test = require('./routes/test');
 var version = config.version;
 
 logger.debug("Overriding 'Express' logger");
+//app.options('*', cors()); // include before other routes
+//app.use(cors());
 app.use(express.logger({format: 'dev', stream: logger.stream }));
 app.use(express.json());       // to support JSON-encoded bodies
 app.use(express.urlencoded()); // to support URL-encoded bodies
@@ -35,6 +39,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 SegfaultHandler.registerHandler();
 
+/*
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});*/
 app.use('/', route_index);
 app.use('/', route_searching);
 app.use('/', route_imgsrv);
@@ -163,6 +173,12 @@ logger.info("Serving images from " + config.root + " on port " + config.port);
 
 /*app.listen() is a convenience method for creating the server*/
 //app.listen(config.port);
+
+/*
+http.listen(80, function(){
+  console.log('CORS-enabled web server listening on port 80');
+});
+*/
 
 http.listen(config.port, function(){
   console.log('listening on *:' + config.port);

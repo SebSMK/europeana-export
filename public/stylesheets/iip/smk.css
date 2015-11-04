@@ -1,0 +1,92 @@
+
+.navcontainer .toolbar {
+    display:none;
+}
+
+.navcontainer .navbuttons {
+   /* background: none;*/
+}
+
+.iipmooviewer .canvas .annotation:hover {    
+   border: 1px solid rgba(200, 0, 126, 0.1);   
+   cursor: pointer;
+}
+
+.iipmooviewer .canvas .annotation {
+    background-color: rgba(255, 255, 255, 0);    
+/*    border: 1px solid rgba(200, 0, 126, 1);*/
+    opacity: 1;
+    transition: none;
+}
+
+.tip .tip-text .smk_annot{
+	width:300px;
+	padding:1em;
+}
+
+.tip .tip-text .smk_annot img{ 
+  float:right;
+  margin:5px;
+}
+
+.iipmooviewer .credit {       
+    width: 20%; 
+    max-width: 250px;
+}
+   
+.iipmooviewer .credit p{    
+    font-size: .9em;
+    line-height: 1em;
+    margin-top: 1em;
+}
+
+.tip {
+    font-size: 1em;
+    line-height: 1.2em;
+    box-shadow: none;
+}
+
+#lang {
+    background: none repeat scroll 0 0 transparent;
+    right: 10px;
+    text-align: center;
+    top: 50px;
+    width: 300px; 
+    position: absolute;
+    z-index: 2;
+}
+
+.language-selector {
+    float: right;
+    text-align: right;
+    width: 50%;
+    border: 0 none;
+    font: inherit;
+    margin: 0;
+    padding: 0;
+    vertical-align: baseline;
+}
+
+.language-selector ul {
+    list-style-image: none;
+    list-style-type: none;
+}
+
+.language-selector li {
+    display: inline-block;
+    margin-left: 0.5em;
+}
+.language-selector li, .language-selector a {
+    color: #A4A4A4 ;
+    line-height: inherit;
+    text-decoration: none;
+}
+
+.language-selector li.active a {
+    color: #424242;
+    font-weight: bold;
+}
+
+.language-selector a {
+    background: none repeat scroll 0 0 transparent;
+}
