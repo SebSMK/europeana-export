@@ -25,10 +25,11 @@ module.exports = function(router, io) {
 router.use(config.IIPPath, proxy(url.parse(sprintf('http://%s%s', config.IIPHost,config.IIPPath))));
 
 //* proxying calls to IIP images
-router.use('/imgsrv/test/zoom/images/', proxy(url.parse('http://172.20.1.203:4000/images/')));
+router.use('/imgsrv/test/zoom/images/', proxy(url.parse(sprintf('http://localhost:%s/images/', config.port))));
 
 
 router.get('/imgsrv/test/zoom/:id',           
+      /*
       function(req, res, next) {    
       //* loading socket IO 
           io.sockets.emit('message', { message: 'starting get console ' + config.version}); 
@@ -50,8 +51,8 @@ router.get('/imgsrv/test/zoom/:id',
               
               next(); 
           });                                                     
-      },           
-      // ...real stuff starting here
+      }, */          
+      // ...real stuff starts here
       function(req, res, next) {        
         sendInterfaceMessage('//////// start zooming *******');                        
         //res.sendfile('views/zoom.html');
@@ -196,7 +197,8 @@ router.get('/imgsrv/test/zoom/:id',
   };
   
   function sendInterfaceMessage(message){
-      io.sockets.emit('message', { message: sprintf('%s -- %s', getFormatedNowDate() , message )});  
+      if (io !== undefined && io != null)
+        io.sockets.emit('message', { message: sprintf('%s -- %s', getFormatedNowDate() , message )});  
   };
   
   function getFormatedNowDate(){
@@ -208,8 +210,7 @@ router.get('/imgsrv/test/zoom/:id',
        var m = date.getMinutes();
        var s = date.getSeconds();
        var ms = date.getMilliseconds();
-       
-       
+              
        return sprintf('%s-%s-%sT%s:%s:%s.%s', y, M, d, h, m, s, ms);
         
   };
