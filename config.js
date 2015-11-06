@@ -23,6 +23,11 @@ var config = {
     solrDAMHost : '172.20.1.159',
     solrDAMPort : 8180,
     solrDAMCore : '/solr-example/dev_DAM/',
+    
+    // Solr tag
+    solrTagHost : '172.20.1.94',
+    solrTagPort : 8080,
+    solrTagCore : '/solr-h4dk/prod_search_pict/',
 
     // IIP
     IIPHost : '172.20.1.203',
