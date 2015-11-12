@@ -2,7 +2,7 @@
     // Server path: set if not using default path
                                                                                                                                                                                                               
     // Copyright or information message    
-    var credit = "G&aring; p&aring; opdagelse i v&aelig;rket<p><i>h&oslash;jreklik for mere information om zoom funktionalitet.</i></p>";
+    var credit = "&copy; Copyright or Public Domain";
 
 
    // Create our viewer object
@@ -13,7 +13,7 @@
 		server: server,
 		credit: credit, 
 		scale: 7.17,
-		showNavWindow: false,
+		showNavWindow: true,
 		showNavButtons: true,
 		winResize: true,
 		protocol: 'iip',

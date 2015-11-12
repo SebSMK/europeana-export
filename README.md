@@ -9,11 +9,16 @@ For linux, it's recommended to create a user named *node* (the name isn't import
 In Debian/Ubuntu, you will need to install some or all of these libraries. Login as *root* and 
 install the following
 
-    $ apt-get update
+  $ apt-get update
 	$ apt-get install libmagick++-dev
 	$ apt-get install libjpeg-dev  
 	$ apt-get install exiv2
 	$ apt-get install libexiv2-dev
+  
+  add to the path and reload bash:
+  
+  $ echo "export PATH=/usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16:$PATH" >> ~/.bashrc
+  $ source ~/.bashrc
 
 Configuration can be found in the *config.js* file where the solr instance can be
 configured, as well as the default texts for the image metadata.

@@ -49,8 +49,8 @@ module.exports = function(router, io) {
                     'q': sprintf('(picture_url%%3A*%s.jpg)', solrDAMResponse.response.docs[0].invnumber.toUpperCase()),
                     'facet':'true',
                     'facet.mincount': 1,
-                    'facet.limit': -1,
-                    'facet.field':'prev_facet',
+                    'facet.limit': -1,                    
+                    'facet.field':'prev_q',
                     'rows': '0',
                     'wt': 'json',
                     'indent': 'true',
@@ -73,7 +73,7 @@ module.exports = function(router, io) {
         })
         .then(function(solrTagResponse) {
             if (solrTagResponse.response.numFound > 0) {
-                res.send(solrTagResponse);
+                res.jsonp(solrTagResponse);
             }else {
                 logger.info("/tag/get tag - object not found");
                 throw ({error: "/tag/get tag - object not found"});

@@ -14,7 +14,6 @@ var imagemagick = require('imagemagick-native'),
     deleteFile = Q.denodeify(fs.unlink),
     writeFile = Q.denodeify(fs.writeFile),
     readFile = Q.denodeify(fs.readFile);
-getFileStat = Q.denodeify(fs.stat);
 
 Image = (function() {
 
@@ -35,7 +34,7 @@ Image = (function() {
      **/
     Image.prototype.convert = function() {
 
-        var dpi = 72,
+        var dpi = 150,
             cm, inches,
             width = 0,
             height = 0
@@ -50,7 +49,7 @@ Image = (function() {
         try {
             convertedfile = imagemagick.convert({
                 srcData: this.imageData,
-                density: dpi,
+                //density: dpi,
                 //                format: type,
                 strip: true,
                 ignoreWarnings: 1
@@ -89,17 +88,7 @@ Image = (function() {
 
         logger.info('Image.prototype.process: ' + JSON.stringify(this, null, 4));
 
-        getFileStat(self.path)
-            .then(function(stat) {
-                if (stat.size > config.maxFileSize)
-                    throw (sprintf("file %s too large: %s Ko", self.path, stat.size))
-                else
-                    return Q.defer().resolve();
-            })
-            .then(function() {
-                logger.info('size is ok, start reading file', self.path);
-                return readFile(self.path);
-            })
+        readFile(self.path)            
             .then(function(data) {
                 logger.info('read image file', self.path);
                 self.imageData = data;
@@ -221,13 +210,6 @@ Image = (function() {
     /**
      * Private methods 
      **/
-
-    function testSize(path) {
-        var stats = fs.statSync(path);
-        var fileSizeInBytes = stats["size"];
-    }
-
-
     function convertPyr(path) {
         var self = this;
         var deferred = Q.defer();

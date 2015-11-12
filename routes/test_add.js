@@ -18,7 +18,7 @@ module.exports = function(router, io) {
 	router.set('views', path.join(__dirname, '../views'));
 	router.set('view engine', 'jade');
 
-	router.get('/imgsrv/test/add/allv1',        
+	router.get('/imgsrv/test/add/all_old',        
 
 			// loading interface and socket IO before proceeding with the route...
 			function(req, res, next) {             
@@ -438,33 +438,35 @@ module.exports = function(router, io) {
 	router.get('/imgsrv/test/add/:id', 
 			// loading interface and socket IO before proceeding with the route...
 			function(req, res, next) {             
-		res.render('chat');  
-		io.on('connection', function(socket){
-			console.log('io connected');                                                          
-			next();        
-		});               
-	},
-	function(req, res, next) {             
-		io.sockets.emit('message', { message: 'welcome to import console ' + config.version});                                            
-		next();                               
-	},
-	// ...real stuff starting here
-	function(req, res, next) {
-
-		sendInterfaceMessage('//////// start processing *******');
-
-		addById(req.params.id)                    
-		.then(
-				// processing output
-				function(tosend){
-					sendInterfaceMessage('******** processing done //////////');
-					res.end();
-				},
-				function(error){
-					sendInterfaceMessage('ERROR -- ' + JSON.stringify(error));
-					sendInterfaceMessage('******** processing done //////////');
-				}); 
-	});
+    		res.render('chat');  
+    		io.on('connection', function(socket){
+    			console.log('io connected');                                                          
+    			next();        
+    		});               
+    	},
+    	function(req, res, next) {             
+    		io.sockets.emit('message', { message: 'welcome to import console ' + config.version});                                            
+    		next();                               
+    	},
+    	// ...real stuff starting here
+    	function(req, res, next) {
+    
+    		sendInterfaceMessage('//////// start processing *******');
+    
+    		addById(req.params.id)                    
+    		.then(
+    				// processing output
+    				function(tosend){
+    					sendInterfaceMessage('processing result: ' + tosend);
+              sendInterfaceMessage('******** processing done //////////');
+    					res.end();
+    				},
+    				function(error){
+    					sendInterfaceMessage('ERROR -- ' + JSON.stringify(error));
+    					sendInterfaceMessage('******** processing done //////////');
+    				}); 
+    	}
+  );
 
 
 	/***
@@ -497,7 +499,7 @@ module.exports = function(router, io) {
 
 		sendInterfaceMessage("/imgsrv/addbyid - solr req:" +  solrPath);
 
-		return solr.get(solrPath + solrReq.join('&'))                    
+		solr.get(solrPath + solrReq.join('&'))                    
 		.then( function(solrResponse){
 
 			// find artwork(s) in solrdam 
@@ -508,30 +510,34 @@ module.exports = function(router, io) {
 				// convert artwork(s)
 				for (i = 0; i < solrResponse.response.numFound; i++){
 					var pyrconv = new converter(); 
-					var params = {}, doc = solrResponse.response.docs[i];
+					var params = {}, doc = solrResponse.response.docs[i], size, created;
 					params.id = doc.id;
 					params.link = pathConv2Unix(doc.link);
 					params.invnumber = doc.invnumber;      
 
-					var log = function(){
-						sendInterfaceMessage(sprintf("** addbyid start processing - %s - %s %s", params.invnumber, params.id, params.link ));
-						return Q.defer().resolve('kok');
-					}
-
-					sendInterfaceMessage(sprintf("** addbyid start processing - %s - %s %s", params.invnumber, params.id, params.link ));                                                                                  
-
-					promise.push(
-							pyrconv.exec(params)
-							.then(
-									function(result){
-										sendInterfaceMessage(sprintf("processed - %s **", result ));
-									},
-									function(err){
-										sendInterfaceMessage(sprintf("processing ERROR - %s **", err ));
-									})                          
-					);                                                                                                       
+					sendInterfaceMessage(sprintf("** addbyid start processing - %s - %s %s", params.invnumber, params.id, params.link ));          
+          
+          promise.push(
+            getFileStat(params.link)
+              .then(function(stat) {
+                  // get and check file size
+                  return checkFileSize(stat);              
+              })
+              .then(function(stat){
+                  
+                    // start conversion
+      							return pyrconv.exec(params)
+                     .then (function(res){
+                        // save conversion-data back to solr-dam
+                        return sendDataBackToSolrDAM(params, res, stat);
+                    })             							                         
+    					                  
+              })
+              .catch(function (err){      			 
+        			   deferred.reject(err);      			         
+        		  })          
+          )                                            					                                                                                                      
 				};                 
-
 			}else{              
 				logger.info("/imgsrv/addbyid - image not found :" + id);
 				deferred.reject({error: "/imgsrv/addbyid - image not found: " + id});  
@@ -552,17 +558,52 @@ module.exports = function(router, io) {
 				promise = []; //empty array, since it's global.
 				deferred.resolve(tosend);
 			}); 
-
-			return deferred.promise;
 		})
 		.catch(function (err){
-
-			logger.error('/imgsrv/addbyid', err);
-			sendInterfaceMessage("/imgsrv/addbyid - error: " +  err); 
-			deferred.rejected(err);
-			return deferred.promise;         
+			logger.error('/imgsrv/addbyid', err);			 
+			deferred.reject(err);         
 		}); 
+    
+    return deferred.promise;
 	};
+  
+  function sendDataBackToSolrDAM(params, res, stat){
+    var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);                                      
+    var reqparams = [{"id": params.id, 
+                      "value":{"set": res.pyrpath}, 
+                      "size":{"set": stat.size}, 
+                      "created":{"set": stat.created},
+                      "field_last_updated":{"set": getSOLRFormatedNowDate()}}];    
+    var deferred = Q.defer();            
+    
+    solr.postjson(reqparams)
+      .then( function(solrResponse){
+         logger.info("send back to solrDAM:", {invnumber: params.invnumber, id: params.id});
+         deferred.resolve(sprintf("send back to solrDAM: - %s - %s", params.invnumber, params.id));
+      })
+      .catch(function (err) {                            
+          logger.error('send back to solrDAM:', err);
+          deferred.reject('send back to solrDAM - error: ' + err);
+      }); 
+      
+    return deferred.promise; 
+  
+  }
+  
+  function checkFileSize(stat){
+      var deferred = Q.defer();  
+      // get and check file size
+      if (stat.size > config.maxFileSize){
+        deferred.reject(sprintf("file %s too large: %s Ko", self.path, stat.size));
+      }                
+      else{
+          size = stat.size;
+          created = convertToSolrDate(stat.mtime);
+          deferred.resolve({size: size, created: created});
+      } 
+      
+      return deferred.promise;    
+  };
   
   function updateById(id){
 
@@ -645,7 +686,7 @@ module.exports = function(router, io) {
 
 			logger.error('/imgsrv/updateById', err);
 			sendInterfaceMessage("/imgsrv/updateById - error: " +  err); 
-			deferred.rejected(err);
+			deferred.reject(err);
 			return deferred.promise;         
 		}); 
 	};
@@ -709,7 +750,7 @@ module.exports = function(router, io) {
             .catch(function (err){
         			logger.error('/imgsrv/updater', err);
         			sendInterfaceMessage("/imgsrv/updater - error: " +  err); 
-        			deferred.rejected(err);        			      
+        			deferred.reject(err);        			      
         		}); 
                                                                                               
         });
@@ -719,7 +760,7 @@ module.exports = function(router, io) {
 
 	function pathConv2Unix(windowsPath){
 		var unixPath = upath.toUnix(windowsPath);
-		return unixPath.replace('F:/FotoII/', '');  
+		return unixPath.replace('/foto-03/FotoI/', config.mnt.fotoI);  
 	};
 
 	function sendInterfaceMessage(message){
@@ -740,7 +781,21 @@ module.exports = function(router, io) {
 		return sprintf('%s-%s-%sT%s:%s:%s.%s', y, M, d, h, m, s, ms);
 	};
   
-  	function convertToSolrDate(date){		
+  function getSOLRFormatedNowDate(){
+    var date = new Date();		
+		var y = date.getFullYear();
+		var M = date.getMonth();
+		var d = date.getDate();
+		var h = date.getHours();
+		var m = date.getMinutes();
+		var s = date.getSeconds();
+		var ms = date.getMilliseconds();
+
+
+		return sprintf('%s-%s-%sT%s:%s:%sZ', y, M, d, h, m, s);
+	};
+  
+  function convertToSolrDate(date){		
 		var y = date.getFullYear();
 		var M = date.getMonth();
 		var d = date.getDate();

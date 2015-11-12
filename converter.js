@@ -37,7 +37,7 @@ Converter = (function() {
         resourcePath = params.link;            
         logger.info("resourcePath :", resourcePath);
     
-        filePath = path.join(config.root, resourcePath);
+        filePath = resourcePath; //path.join(config.root, resourcePath);
         logger.info("filePath name :", filePath);
         
         fs.exists(filePath, function(exists) {
@@ -53,21 +53,8 @@ Converter = (function() {
                 logger.error(ex);
                 deferred.reject(400);
             }
-            return image.process(function(data, type) {                                    
-                
-                var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);                
-                var reqparams = [{"id": solrid, "value":{"set": data}}];
-                
-                solr.postjson(reqparams)
-                  .then( function(solrResponse){
-                     logger.info("/imgsrv/post - solr dam response :", solrResponse);
-                     deferred.resolve(sprintf("/imgsrv/post - pyr image created - %s - %s - %s", invnumber, solrid, data));
-                  })
-                  .catch(function (err) {
-                      //catch and break on all errors or exceptions on all the above methods
-                      logger.error('/imgsrv/post', err);
-                      deferred.reject('/imgsrv/post error: <br>' + err);
-                  });                               
+            return image.process(function(data, type) {                                                                    
+                deferred.resolve({id: solrid, pyrpath: data});                                                                             
             },
             function(error) {
                 deferred.reject(error);

@@ -1,11 +1,16 @@
 
+#img-comparator-viewer .close-icon {
+    background-color: #fff;    
+    right: -5px;
+    top: -8px;    
+}
+
+/*  DURER css
 .navcontainer .toolbar {
     display:none;
 }
 
-.navcontainer .navbuttons {
-   /* background: none;*/
-}
+
 
 .iipmooviewer .canvas .annotation:hover {    
    border: 1px solid rgba(200, 0, 126, 0.1);   
@@ -14,7 +19,7 @@
 
 .iipmooviewer .canvas .annotation {
     background-color: rgba(255, 255, 255, 0);    
-/*    border: 1px solid rgba(200, 0, 126, 1);*/
+
     opacity: 1;
     transition: none;
 }
@@ -90,3 +95,4 @@
 .language-selector a {
     background: none repeat scroll 0 0 transparent;
 }
+ */

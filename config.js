@@ -1,7 +1,7 @@
 
 var config = {
 
-    version :  '000.001.033',
+    version :  '000.001.035',
     
     // Metadata values
     attribution : "SMK Photo/Skou-Hansen/Buccarella", /*max 32 bytes!*/
@@ -46,6 +46,10 @@ var config = {
     tempFilePath : '/tmp/',
     root : '/mnt/fotoII/',
     port : 4000,
+    
+    // Mounts
+    mnt: {fotoI: '/mnt/fotoI/',
+          fotoII: '/mnt/fotoII/'},
     
     // imageMagick
     maxFileSize:  370000000
