@@ -7,7 +7,7 @@ cd c:\wamp32\www\node\node-express-ajax-craigslist
 start node --debug .\bin\www
 start node-inspector --save-live-edit true            
 
-cd /root/git/corpus-image-server/
+cd /home/seb/git/corpus-image-server/
 supervisor --debug app.js 
 node-inspector --save-live-edit true            
 mongod --dbpath=/data --port 27017

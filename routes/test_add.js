@@ -457,7 +457,10 @@ module.exports = function(router, io) {
     		.then(
     				// processing output
     				function(tosend){
-    					sendInterfaceMessage('processing result: ' + tosend);
+    					sendInterfaceMessage('processing result: ' + req.params.id);
+              for (var line in tosend) {
+                 sendInterfaceMessage(tosend[line]);              
+              }              
               sendInterfaceMessage('******** processing done //////////');
     					res.end();
     				},
@@ -505,7 +508,7 @@ module.exports = function(router, io) {
 			// find artwork(s) in solrdam 
 			if(solrResponse.response.numFound > 0){                            
 				logger.info("/imgsrv/addbyid - solr says:", solrResponse);
-				sendInterfaceMessage("/imgsrv/addbyid - solr says:" +  JSON.stringify(solrResponse));
+				sendInterfaceMessage("/imgsrv/addbyid - solr says, numfound:" +  JSON.stringify(solrResponse.response.numFound));
 
 				// convert artwork(s)
 				for (i = 0; i < solrResponse.response.numFound; i++){
@@ -517,26 +520,24 @@ module.exports = function(router, io) {
 
 					sendInterfaceMessage(sprintf("** addbyid start processing - %s - %s %s", params.invnumber, params.id, params.link ));          
           
-          promise.push(
-            getFileStat(params.link)
+          promise.push(processAddById(pyrconv, params));
+              /*
+              getFileStat(params.link)
               .then(function(stat) {
                   // get and check file size
-                  return checkFileSize(stat);              
+                  return checkFileSize(stat, params);              
               })
               .then(function(stat){
                   
+                  sendInterfaceMessage(params.id);
                     // start conversion
       							return pyrconv.exec(params)
                      .then (function(res){
                         // save conversion-data back to solr-dam
                         return sendDataBackToSolrDAM(params, res, stat);
-                    })             							                         
-    					                  
-              })
-              .catch(function (err){      			 
-        			   deferred.reject(err);      			         
-        		  })          
-          )                                            					                                                                                                      
+                    })                               							                             					                  
+              })                                     
+          ) */                                           					                                                                                                      
 				};                 
 			}else{              
 				logger.info("/imgsrv/addbyid - image not found :" + id);
@@ -549,10 +550,10 @@ module.exports = function(router, io) {
 				var tosend = []
 				result.forEach(function(res) { 
 					if (res.state === "fulfilled") {
-						tosend.push(res.value);
+						tosend.push("SUCCESS: " +res.value);
 					}                
 					if (res.state === "rejected") {
-						tosend.push(res.reason);
+						tosend.push("ERROR: " + res.reason);
 					}                
 				});     
 				promise = []; //empty array, since it's global.
@@ -562,10 +563,29 @@ module.exports = function(router, io) {
 		.catch(function (err){
 			logger.error('/imgsrv/addbyid', err);			 
 			deferred.reject(err);         
-		}); 
+		})
+    .done(); 
     
     return deferred.promise;
 	};
+  
+  function processAddById(pyrconv, params){
+    return getFileStat(params.link)
+              .then(function(stat) {
+                  // get and check file size
+                  return checkFileSize(stat, params);              
+              })
+              .then(function(stat){
+                  
+                  sendInterfaceMessage(params.id);
+                    // start conversion
+      							return pyrconv.exec(params)
+                     .then (function(res){
+                        // save conversion-data back to solr-dam
+                        return sendDataBackToSolrDAM(params, res, stat);
+                    })                               							                             					                  
+              })         
+  }
   
   function sendDataBackToSolrDAM(params, res, stat){
     var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);                                      
@@ -590,11 +610,11 @@ module.exports = function(router, io) {
   
   }
   
-  function checkFileSize(stat){
+  function checkFileSize(stat, params){
       var deferred = Q.defer();  
       // get and check file size
       if (stat.size > config.maxFileSize){
-        deferred.reject(sprintf("file %s too large: %s Ko", self.path, stat.size));
+        deferred.reject(sprintf("%s - file size over config.maxFileSize: %s Ko - %s", params.invnumber, stat.size, params.link));
       }                
       else{
           size = stat.size;
