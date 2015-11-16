@@ -1,7 +1,8 @@
 
 var Q = require('q'),
     http = require('http'),
-    logger = require("./logging");
+    logger = require("./logging"),
+    sprintf = require('sprintf-js').sprintf;
 
 Solr = (function() {
 
@@ -18,6 +19,50 @@ Solr = (function() {
     /**
      * Instance Methods 
      **/
+    Solr.prototype.get2 = function(path, params) {    
+        var reqpath = path + processParams(params);
+        var deferred = Q.defer(),
+            options = {
+                host: this.host,
+                port: this.port,
+                path: reqpath,
+                method: 'GET'
+            };
+
+        var get = http.get(options, function (resp) {
+
+            var data = '';
+            logger.info('STATUS: ' + resp.statusCode);
+            logger.info('HEADERS: ' + JSON.stringify(resp.headers));  
+            resp.setEncoding('utf8');
+
+            resp.on('data', function(chunk) {
+                data += chunk;
+            });
+            resp.on('end', function() {
+                if (data !== ''){
+                    var jsonData = JSON.parse(data);
+                    logger.debug("Solr: response received", JSON.stringify(jsonData, null, 4));
+                    deferred.resolve(jsonData);
+                }else{
+                    logger.error("Solr: empty GET result returned");
+                    deferred.reject("Solr: empty GET result returned");
+                }
+            });
+            resp.on('error', function(err) {
+                logger.error("Solr: http.request GET error: " + err);
+                deferred.reject(err);
+            });
+        });
+        
+        get.on('error', function(e) {
+            logger.error("Solr:", e.message);
+            deferred.reject("Solr:" + e.message);
+        });
+        
+        return deferred.promise;
+    }
+    
     Solr.prototype.get = function(path) {
         var deferred = Q.defer(),
             options = {
@@ -114,23 +159,20 @@ Solr = (function() {
         return deferred.promise;
     }
     
-   /* 
-    Solr.prototype.update = function (data, callback) {
-        var self = this;
-        this.options.json = JSON.stringify(data);
-        this.options.fullPath = [this.options.path, this.options.core, 'update/json?commit=' + this.autoCommit + '&wt=json']
-            .filter(function (element) {
-                if (element) {
-                    return true;
-                }
-                return false;
-            })
-            .join('/');
-        updateRequest(this.options, callback);
+    
+    /***
+     * PRIVATE
+     **/    
+    processParams = function(solrParams){
+            var solrReq = [];
 
-        return self;
-    }
-     */
+            for (var key in solrParams) {
+                if (solrParams.hasOwnProperty(key)) {
+                    solrReq.push(sprintf('%s=%s', key, solrParams[key]));
+                }
+            }            
+            return solrReq.join('&');    
+    }                
     
     return Solr;
 })();

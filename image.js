@@ -24,9 +24,10 @@ Image = (function() {
     /**
      * Constructor
      **/
-    function Image(path, solrid) {
+    function Image(path, invnumber, solrid) {
         this.path = path;
         this.solrid = solrid;
+        this.invnumber = invnumber;
     }
 
     /**
@@ -34,7 +35,7 @@ Image = (function() {
      **/
     Image.prototype.convert = function() {
 
-        var dpi = 150,
+        var //dpi = 150,
             cm, inches,
             width = 0,
             height = 0
@@ -94,11 +95,14 @@ Image = (function() {
                 self.imageData = data;
                 return detectFile(self.path);
             })
+            
             .then(function(type) {
                 logger.info('detected file type :', type);
                 self.type = type;
-                return writeFile(self.image, self.imageData);
+                //return writeFile(self.image, self.imageData);
+                return Q.defer().resolve();
             })
+            /*
             .then(function() {
                 logger.info('created temp copy', self.image, "(" + self.path + ")");
                 return openMetadata(self.image);
@@ -119,19 +123,22 @@ Image = (function() {
                 if (self.imageTags) {
                     return addMetadata(self.image, self.imageTags);
                 }
-                return Q.defer().resolve(); /*just hit next then*/
+                return Q.defer().resolve(); //just hit next then
             })
 
-        /*create pyr file*/
-        .then(function() {
+            
+            //create pyr file
+            .then(function() {
                 if (self.imageTags) {
                     logger.info('added new metadata', self.image, "(" + self.path + ")");
                 }
                 return readFile(self.image);
             })
-            .then(function(data) {
-                self.pyr_path = config.tempFilePath + self.imageTags['Iptc.Application2.Headline'] + '_' + self.solrid + '_pyr.tif';
-                return writeFile(self.pyr_path + '.tmp', data);
+            
+            */
+            .then(function() {
+                self.pyr_path = config.tempFilePath + self.invnumber + '_' + self.solrid + '_pyr.tif';
+                return writeFile(self.pyr_path + '.tmp', self.imageData);
             })
             .then(function() {
                 logger.info('create tmp pyr tiff');

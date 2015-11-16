@@ -20,6 +20,7 @@ curl '172.20.1.203:4000/post' -H 'Content-type:application/json' -d '{"id":"561e
 *****/
 
 **** magick
+convert 'dep665.tif' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:dep665_pyr.tif'
 
 
 *** CONVERT IMAGE

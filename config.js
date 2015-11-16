@@ -1,7 +1,9 @@
 
 var config = {
 
-    version :  '000.001.035',
+    version :  '000.001.037',
+    
+    dummy: true,
     
     // Metadata values
     attribution : "SMK Photo/Skou-Hansen/Buccarella", /*max 32 bytes!*/
@@ -36,10 +38,7 @@ var config = {
               thumb: 100,
               medium: 200,
               large: 500    
-    },
-
-    // MongoDB
-    mongoURL: 'mongodb://localhost:27017/DAM_PYR',
+    },    
 
     smkInventoryNumber : 'Iptc.Application2.ObjectName',
     originalCopyright : 'Iptc.Application2.Copyright',
@@ -51,8 +50,29 @@ var config = {
     mnt: {fotoI: '/mnt/fotoI/',
           fotoII: '/mnt/fotoII/'},
     
-    // imageMagick
-    maxFileSize:  370000000
+    // Import parameters
+    maxFileSize:  500000000,   
+    solrParamsImportAll: {
+                //'q': 'invnumber%3Akms*+AND+(type%3A".tif"+OR+type%3A".jpg")',
+                
+                'fq': 'invnumber:kms*',                
+                'rows': 0,
+                'wt': 'json',
+                'indent': 'true',
+                'facet': 'true',
+                'facet.mincount': 1,
+                
+                'facet.field': 'invnumber',
+                'f.invnumber.facet.sort': 'index',                
+                'json.nl': 'map',
+                'facet.limit': 2,
+                'q': 'invnumber%3Akms5957'
+                
+            }
+    
+    
+    // MongoDB
+    //mongoURL: 'mongodb://localhost:27017/DAM_PYR',
     
 }
 
