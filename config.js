@@ -53,7 +53,7 @@ var config = {
     // Import parameters
     maxFileSize:  500000000,   
     solrParamsImportAll: {
-                //'q': 'invnumber%3Akms*+AND+(type%3A".tif"+OR+type%3A".jpg")',
+                'q': 'invnumber%3Akms*+AND+(type%3A".tif"+OR+type%3A".jpg")',
                 
                 'fq': 'invnumber:kms*',                
                 'rows': 0,
@@ -65,8 +65,9 @@ var config = {
                 'facet.field': 'invnumber',
                 'f.invnumber.facet.sort': 'index',                
                 'json.nl': 'map',
+                
                 'facet.limit': 2,
-                'q': 'invnumber%3Akms5957'
+                //'q': 'invnumber%3Akms5957'
                 
             }
     

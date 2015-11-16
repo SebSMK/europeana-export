@@ -59,7 +59,7 @@ module.exports = function(router, io) {
         // ...real stuff starting here
         function(req, res, next) {
 
-            sendInterfaceMessage('//////// start processing all images *******');
+            sendInterfaceMessage('//////// start processing all images');
             
             var deferred = Q.defer();
             var solrPath = sprintf('%sselect?', config.solrDAMCore);            
@@ -91,8 +91,8 @@ module.exports = function(router, io) {
 
                     // process images
                     if (objectedItems.length > 0) {
-                        logger.info("/imgsrv/addall - solr says:", objectedItems.length);
-                        sendInterfaceMessage("/imgsrv/addall - solr says:" + objectedItems.length);
+                        logger.info("addAll - solr says:", objectedItems.length);
+                        sendInterfaceMessage("addAll - solr says:" + objectedItems.length);
 
                         var artwork2Process = [];
                         for (var i = 0, l = objectedItems.length; i < l; i++) {
@@ -102,8 +102,23 @@ module.exports = function(router, io) {
                             artwork2Process.push(params);
                         };
 
-                        var convimage = function(params) {                            
-                            return addById(params.invnumber);
+                        var convimage = function(params) {
+                            sendInterfaceMessage(sprintf('*** %s ----- start processing', params.invnumber.toUpperCase()));                            
+                            return addById(params.invnumber)                            
+                                    .then(
+                                        // processing output
+                                        function(tosend) {                                            
+                                            for (var line in tosend) {
+                                                sendInterfaceMessage(tosend[line]);
+                                            }
+                                            sendInterfaceMessage(sprintf(' %s ----- processing done ***', params.invnumber.toUpperCase()));
+                                            return Q.defer().resolve();                                            
+                                        },
+                                        function(error) {
+                                            sendInterfaceMessage('ERROR -- ' + JSON.stringify(error));
+                                            sendInterfaceMessage(sprintf(' %s ----- processing done ***', params.invnumber.toUpperCase()));
+                                            return Q.defer().resolve();
+                                        })                                        
                         };
 
                         var processing = function(artworks) {
@@ -124,12 +139,12 @@ module.exports = function(router, io) {
                         processing(artwork2Process)
                         .then(
                             function() {                                
-                                sendInterfaceMessage('******** - all images processed //////////');
+                                sendInterfaceMessage('all images processed //////////');
                                 res.end();
                             },
                             function(error) {
-                                sendInterfaceMessage('ERROR -- ' + JSON.stringify(error));
-                                sendInterfaceMessage('******** - processing done //////////');
+                                sendInterfaceMessage('GENERAL ERROR -- ' + JSON.stringify(error));
+                                sendInterfaceMessage('when processing images //////////');
                                 res.end();
                             });
 
@@ -162,7 +177,7 @@ module.exports = function(router, io) {
         // ...real stuff starting here
         function(req, res, next) {
 
-            sendInterfaceMessage(sprintf('//----- %s ----- start processing', req.params.id.toUpperCase()));
+            sendInterfaceMessage(sprintf('******* %s ----- start processing', req.params.id.toUpperCase()));
 
             addById(req.params.id)
                 .then(
@@ -172,12 +187,12 @@ module.exports = function(router, io) {
                         for (var line in tosend) {
                             sendInterfaceMessage(tosend[line]);
                         }
-                        sendInterfaceMessage(sprintf('----- %s ----- processing done //', req.params.id.toUpperCase()));
+                        sendInterfaceMessage(sprintf('%s ----- processing done *******', req.params.id.toUpperCase()));
                         res.end();
                     },
                     function(error) {
                         sendInterfaceMessage('ERROR -- ' + JSON.stringify(error));
-                        sendInterfaceMessage(sprintf('----- %s ----- processing done //', req.params.id.toUpperCase()));
+                        sendInterfaceMessage(sprintf('%s ----- processing done *******', req.params.id.toUpperCase()));
                     })
                     .done();
         }
@@ -192,6 +207,7 @@ module.exports = function(router, io) {
     function addById(id) {
 
         var promise = [];
+        var deferred = Q.defer();
 
         var solrPath = sprintf('%sselect?', config.solrDAMCore);
         var solrParams = {
@@ -200,27 +216,16 @@ module.exports = function(router, io) {
             'indent': 'true',
             'json.nl': 'map',
             'fl': 'link,id,invnumber'
-        };
-        var solrReq = [];
-
-        for (var key in solrParams) {
-            if (solrParams.hasOwnProperty(key)) {
-                solrReq.push(sprintf('%s=%s', key, solrParams[key]));
-            }
-        }
+        };       
             
         var solr = new Solr(config.solrDAMHost, config.solrDAMPort);
-        var deferred = Q.defer();
-
-        sendInterfaceMessage("/imgsrv/addbyid - solr req:" + solrPath);
-
         solr.get2(solrPath, solrParams)
             .then(function(solrResponse) {
 
                 // find artwork(s) in solrdam 
                 if (solrResponse.response.numFound > 0) {
-                    logger.info("/imgsrv/addbyid - solr says:", solrResponse);
-                    sendInterfaceMessage("/imgsrv/addbyid - solr says, numfound:" + JSON.stringify(solrResponse.response.numFound));
+                    logger.info("addByID - solr says:", solrResponse);
+                    sendInterfaceMessage("addByID - solr says, numfound:" + JSON.stringify(solrResponse.response.numFound));
 
                     // convert artwork(s)
                     for (i = 0; i < solrResponse.response.numFound; i++) {
@@ -232,16 +237,13 @@ module.exports = function(router, io) {
                         params.link = pathConv2Unix(doc.link);
                         params.invnumber = doc.invnumber;
 
-                        sendInterfaceMessage(sprintf("** addbyid start processing - %s - %s %s", params.invnumber, params.id, params.link));
+                        sendInterfaceMessage(sprintf("-- addByID- start processing - %s - %s %s", params.invnumber, params.id, params.link));
 
                         promise.push(processConversion(pyrconv, params));
                     };
                 } else {
-                    logger.info("/imgsrv/addbyid - image not found :" + id);
-                    deferred.reject({
-                        error: "/imgsrv/addbyid - image not found: " + id
-                    });
-                    sendInterfaceMessage("/imgsrv/addbyid - image not found: " + id);
+                    logger.info("addByID - image not found :" + id);
+                    deferred.reject("addByID - image not found: " + id);                    
                 }
 
                 Q.allSettled(promise).then(function(result) {
@@ -249,10 +251,10 @@ module.exports = function(router, io) {
                     var tosend = []
                     result.forEach(function(res) {
                         if (res.state === "fulfilled") {
-                            tosend.push("SUCCESS: " + res.value);
+                            tosend.push("-- addByID- SUCCESS: " + res.value);
                         }
                         if (res.state === "rejected") {
-                            tosend.push("ERROR: " + res.reason);
+                            tosend.push("-- addByID- ERROR: " + res.reason);
                         }
                     });
                     promise = []; //empty array, since it's global.
@@ -260,7 +262,7 @@ module.exports = function(router, io) {
                 });
             })
             .catch(function(err) {
-                logger.error('/imgsrv/addbyid', err);
+                logger.error('addByID- GENERAL ERROR', err);
                 deferred.reject(err);
             })
             .done();
@@ -276,7 +278,7 @@ module.exports = function(router, io) {
             })
             .then(function(stat) {
 
-                sendInterfaceMessage(params.id);
+                sendInterfaceMessage('---- processConversion: ' + params.id);
                 // start conversion
                 return pyrconv.exec(params)
                     .then(function(res) {
