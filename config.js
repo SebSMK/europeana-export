@@ -1,9 +1,31 @@
 
 var config = {
 
-    version :  '000.001.037',
+    version :  '000.001.039',
     
-    dummy: true,
+    // Import parameters        
+    dummy: false,
+    maxFileSize:  2000000000,   
+    solrParamsImportAll: {
+                //'q': 'invnumber%3Akms*+AND+(type%3A".tif"+OR+type%3A".jpg")',
+                //'q': 'invnumber:kms* AND (type:".tif" OR type:".jpg")',
+                'q': '*:*',
+                                
+                'rows': 0,
+                'wt': 'json',
+                'indent': 'true',
+                'facet': 'true',
+                'facet.mincount': 1,
+                
+                'facet.field': 'invnumber',
+                'f.invnumber.facet.sort': 'index',                
+                'json.nl': 'map',
+                                
+                'facet.limit': 20
+                //'fq': 'invnumber:kms*',
+                //'q': 'invnumber%3Akms5957'
+                
+            },
     
     // Metadata values
     attribution : "SMK Photo/Skou-Hansen/Buccarella", /*max 32 bytes!*/
@@ -48,30 +70,8 @@ var config = {
     
     // Mounts
     mnt: {fotoI: '/mnt/fotoI/',
-          fotoII: '/mnt/fotoII/'},
-    
-    // Import parameters
-    maxFileSize:  500000000,   
-    solrParamsImportAll: {
-                'q': 'invnumber%3Akms*+AND+(type%3A".tif"+OR+type%3A".jpg")',
-                
-                'fq': 'invnumber:kms*',                
-                'rows': 0,
-                'wt': 'json',
-                'indent': 'true',
-                'facet': 'true',
-                'facet.mincount': 1,
-                
-                'facet.field': 'invnumber',
-                'f.invnumber.facet.sort': 'index',                
-                'json.nl': 'map',
-                
-                'facet.limit': 2,
-                //'q': 'invnumber%3Akms5957'
-                
-            }
-    
-    
+          fotoII: '/mnt/fotoII/'}
+        
     // MongoDB
     //mongoURL: 'mongodb://localhost:27017/DAM_PYR',
     

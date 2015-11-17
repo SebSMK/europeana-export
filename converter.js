@@ -48,7 +48,7 @@ Converter = (function() {
             try{
                 logger.info("Converter processing :", filePath);
                 image = new Image(filePath, invnumber, solrid);
-                imageProcessor = config.dummy ?  image.dummyprocess : image.process;
+                imageProcessor = config.dummy ? image.dummyprocess.bind(image) : image.process.bind(image);
             }
             catch(ex){
                 logger.error(ex);

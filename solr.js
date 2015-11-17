@@ -29,6 +29,7 @@ Solr = (function() {
                 method: 'GET'
             };
 
+        logger.info('OPTIONS: ', JSON.stringify(options, null, 4));
         var get = http.get(options, function (resp) {
 
             var data = '';
@@ -168,7 +169,7 @@ Solr = (function() {
 
             for (var key in solrParams) {
                 if (solrParams.hasOwnProperty(key)) {
-                    solrReq.push(sprintf('%s=%s', key, solrParams[key]));
+                    solrReq.push(sprintf('%s=%s', key, encodeURIComponent(solrParams[key])));
                 }
             }            
             return solrReq.join('&');    

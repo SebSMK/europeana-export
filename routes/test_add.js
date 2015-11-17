@@ -3,6 +3,7 @@ var express = require('express'),
     path = require('path'),
     logger = require("../logging"),
     config = require('../config'),
+    util = require('../util'),
     converter = require('../converter'),
     Solr = require('../solr'),
     iipproxy = require('../iip'),
@@ -40,11 +41,8 @@ module.exports = function(router, io) {
     /*******************************
      ********  ADD ALL  ***********  
      *
-     * As of today, adding only:
-     * - kms invnumber
+     * As of today:
      * - size limited to config.maxFileSize
-     * - only .tif and .jpeg
-     * - inv. number without space     
      *******************************/
     router.get('/imgsrv/test/add/all',
         function(req, res, next) {
@@ -54,6 +52,7 @@ module.exports = function(router, io) {
             io.sockets.emit('message', {
                 message: 'starting importing all images to proto-DAM' + config.version
             });
+            
             next();
         },
         // ...real stuff starting here
@@ -62,9 +61,7 @@ module.exports = function(router, io) {
             sendInterfaceMessage('//////// start processing all images');
             
             var deferred = Q.defer();
-            var solrPath = sprintf('%sselect?', config.solrDAMCore);            
-           
-            sendInterfaceMessage('solr request: ' + solrPath + JSON.stringify(config.solrParamsImport));
+            var solrPath = sprintf('%sselect?', config.solrDAMCore);                                   
 
             var solr = new Solr(config.solrDAMHost, config.solrDAMPort);
             solr.get2(solrPath, config.solrParamsImportAll)
@@ -74,8 +71,10 @@ module.exports = function(router, io) {
                     var objectedItems = [];
                     for (var facet in solrResponse.facet_counts.facet_fields['invnumber']) {
                         sendInterfaceMessage("facet: " + facet);
-                        if (facet.indexOf(" ") >= 0) continue; // NO WHITE SPACES IN INV NUMBER FOR NOW!!!
-
+                                                
+                        if(!util.isValidDataText(facet))
+                          continue;
+                          
                         var count = parseInt(solrResponse.facet_counts.facet_fields['invnumber'][facet]);
                         if (count > maxCount) {
                             maxCount = count;
@@ -156,12 +155,14 @@ module.exports = function(router, io) {
                     return deferred.promise;
                 })
                 .catch(function(err) {
-                    logger.error('/imgsrv/addall', err);                    
-                    sendInterfaceMessage("/imgsrv/addall - ERROR: " + err);
-                })
-
-                
-
+                    logger.error('addAll - image processing stopped', err);                    
+                    sendInterfaceMessage("addAll - FATAL ERROR: " + err);
+                    sendInterfaceMessage("image processing stopped ////////");
+                    deferred.reject(err);
+                    return deferred.promise;
+                })                
+              
+              res.end();
         });
 
     /*******************************
@@ -210,13 +211,13 @@ module.exports = function(router, io) {
         var deferred = Q.defer();
 
         var solrPath = sprintf('%sselect?', config.solrDAMCore);
-        var solrParams = {
-            'q': sprintf('(id%%3A%s+OR+invnumber%%3A%s)', '"' + id + '"', '"' + id + '"'),
+        var solrParams = {            
+            'q': sprintf('(id:%s OR invnumber:%s)', '"' + id + '"', '"' + id + '"'),            
             'wt': 'json',
             'indent': 'true',
             'json.nl': 'map',
             'fl': 'link,id,invnumber'
-        };       
+        };                       
             
         var solr = new Solr(config.solrDAMHost, config.solrDAMPort);
         solr.get2(solrPath, solrParams)
@@ -237,7 +238,7 @@ module.exports = function(router, io) {
                         params.link = pathConv2Unix(doc.link);
                         params.invnumber = doc.invnumber;
 
-                        sendInterfaceMessage(sprintf("-- addByID- start processing - %s - %s %s", params.invnumber, params.id, params.link));
+                        sendInterfaceMessage(sprintf("-- start processing - %s - %s %s", params.invnumber, params.id, params.link));
 
                         promise.push(processConversion(pyrconv, params));
                     };
@@ -251,10 +252,10 @@ module.exports = function(router, io) {
                     var tosend = []
                     result.forEach(function(res) {
                         if (res.state === "fulfilled") {
-                            tosend.push("-- addByID- SUCCESS: " + res.value);
+                            tosend.push("-- SUCCESS: " + res.value);
                         }
                         if (res.state === "rejected") {
-                            tosend.push("-- addByID- ERROR: " + res.reason);
+                            tosend.push("-- ERROR: " + res.reason);
                         }
                     });
                     promise = []; //empty array, since it's global.
@@ -263,6 +264,7 @@ module.exports = function(router, io) {
             })
             .catch(function(err) {
                 logger.error('addByID- GENERAL ERROR', err);
+                promise = [];
                 deferred.reject(err);
             })
             .done();
