@@ -13,7 +13,8 @@ var imagemagick = require('imagemagick-native'),
     openMetadata = Q.denodeify(exiv.getImageTags),
     deleteFile = Q.denodeify(fs.unlink),
     writeFile = Q.denodeify(fs.writeFile),
-    readFile = Q.denodeify(fs.readFile);
+    readFile = Q.denodeify(fs.readFile),
+    promisePipe = require("promisepipe");    
 
 Image = (function() {
 
@@ -81,18 +82,38 @@ Image = (function() {
         }, 500);
     }
 
+    Image.prototype.dummyprocessPipe = function(done, error) {
+
+        var self = this;
+        logger.info('Image.prototype.process: ' + JSON.stringify(this, null, 4));
+        self.pyr_path = config.tempFilePath + self.invnumber + '_' + self.solrid + '_pyr.tif';
+        promisePipe(
+            fs.createReadStream(self.path),            
+            fs.createWriteStream(self.pyr_path)
+        ).then(function(streams){
+            logger.info("Yay, all streams are now closed/ended/finished!");
+        }, function(err) {
+            logger.error("This stream failed:", err.source);
+            logger.error("Original error was:", err.originalError);
+        });        
+    }
+    
     Image.prototype.process = function(done, error) {
 
         var self = this;
         //self.image = config.tempFilePath + guid() + '.image';
         self.image = config.tempFilePath + self.solrid + '.image';
+        self.pyr_path = config.tempFilePath + self.invnumber + '_' + self.solrid + '_pyr.tif';
 
         logger.info('Image.prototype.process: ' + JSON.stringify(this, null, 4));
-
-        readFile(self.path)            
-            .then(function(data) {
+        
+         promisePipe(
+                fs.createReadStream(self.path),            
+                fs.createWriteStream(self.pyr_path + '.tmp')
+            )            
+            .then(function() {
                 logger.info('read image file', self.path);
-                self.imageData = data;
+                //self.imageData = data;
                 return detectFile(self.path);
             })
             
@@ -135,11 +156,11 @@ Image = (function() {
                 return readFile(self.image);
             })
             
-            */
+            
             .then(function() {
                 self.pyr_path = config.tempFilePath + self.invnumber + '_' + self.solrid + '_pyr.tif';
                 return writeFile(self.pyr_path + '.tmp', self.imageData);
-            })
+            }) */
             .then(function() {
                 logger.info('create tmp pyr tiff');
                 return convertPyr(self.pyr_path);
@@ -163,28 +184,28 @@ Image = (function() {
             })
 
 
-        /*return pyr file*/
-        /*
-        .then(function() { 
-            logger.info('delete tmp pyr tiff');            
-            return readFile(self.pyr_path); 
-            })        
-        .then(function(data) { 
-            logger.info('read updated data from file', self.pyr_path, "(" + self.path + ")");
-            self.imageData = data;
-            deleteFile(self.image).then(function(){logger.info('deleted temp copy', self.image, 
-                                                   "(" + self.path + ")")}); 
-            //return done(self.imageData, self.type);
-            return done(self.imageData, 'image/tif');
-            
+            /*return pyr file*/
+            /*
+            .then(function() { 
+                logger.info('delete tmp pyr tiff');            
+                return readFile(self.pyr_path); 
+                })        
+            .then(function(data) { 
+                logger.info('read updated data from file', self.pyr_path, "(" + self.path + ")");
+                self.imageData = data;
+                deleteFile(self.image).then(function(){logger.info('deleted temp copy', self.image, 
+                                                       "(" + self.path + ")")}); 
+                //return done(self.imageData, self.type);
+                return done(self.imageData, 'image/tif');
+                
+                })
+                */
+            .catch(function(err) {
+                /*catch and break on all errors or exceptions on all the above methods*/
+                logger.error('Image.prototype.process', err);
+                return error(err);
             })
-            */
-        .catch(function(err) {
-            /*catch and break on all errors or exceptions on all the above methods*/
-            logger.error('Image.prototype.process', err);
-            return error(err);
-        })
-    }
+    }     
 
     Image.prototype.download = function(done, error) {
 

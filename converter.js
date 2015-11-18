@@ -40,27 +40,33 @@ Converter = (function() {
         filePath = resourcePath; //path.join(config.root, resourcePath);
         logger.info("filePath name :", filePath);
         
-        fs.exists(filePath, function(exists) {
-            var image, imageProcessor;            
-            if (!exists) {
-                deferred.reject(sprintf('ERROR - %s not found', filePath));
-            }
-            try{
-                logger.info("Converter processing :", filePath);
-                image = new Image(filePath, invnumber, solrid);
-                imageProcessor = config.dummy ? image.dummyprocess.bind(image) : image.process.bind(image);
-            }
-            catch(ex){
-                logger.error(ex);
-                deferred.reject(400);
-            }
-            return imageProcessor(function(data, type) {                                                                    
-                deferred.resolve({id: solrid, pyrpath: data});                                                                             
-            },
-            function(error) {
-                deferred.reject(error);
-            });            
-        });
+        fs.exists(filePath, 
+           function(exists) {
+              var image, imageProcessor;            
+              if (!exists) {
+                  deferred.reject(sprintf('ERROR - %s not found', filePath));
+              }
+              try{
+                  logger.info("Converter processing :", filePath);
+                  image = new Image(filePath, invnumber, solrid);
+                  imageProcessor = config.dummy ? image.dummyprocess.bind(image) : image.process.bind(image);
+                  
+                  return imageProcessor(function(data, type) {                                                                    
+                    deferred.resolve({id: solrid, pyrpath: data});                                                                             
+                    },
+                    function(error) {
+                        deferred.reject(error);
+                    });
+              }
+              catch(ex){
+                  logger.error(ex);
+                  deferred.reject(ex);
+              }                        
+          },
+          function(err) {            
+              logger.error('converter error', err);
+              deferred.reject(err);
+          });        
         
         return deferred.promise;
     }      

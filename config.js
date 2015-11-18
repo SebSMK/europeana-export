@@ -9,21 +9,21 @@ var config = {
     solrParamsImportAll: {
                 //'q': 'invnumber%3Akms*+AND+(type%3A".tif"+OR+type%3A".jpg")',
                 //'q': 'invnumber:kms* AND (type:".tif" OR type:".jpg")',
+                //'fq': 'invnumber:kms*',                
                 'q': '*:*',
+                'facet.limit': -1,
                                 
-                'rows': 0,
-                'wt': 'json',
-                'indent': 'true',
+                'rows': 0,                
                 'facet': 'true',
-                'facet.mincount': 1,
-                
+                'facet.mincount': 1,                
                 'facet.field': 'invnumber',
                 'f.invnumber.facet.sort': 'index',                
-                'json.nl': 'map',
+                
+                'wt': 'json',
+                'indent': 'true',
+                'json.nl': 'map'
                                 
-                'facet.limit': 20
-                //'fq': 'invnumber:kms*',
-                //'q': 'invnumber%3Akms5957'
+                
                 
             },
     
