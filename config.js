@@ -1,11 +1,12 @@
 
 var config = {
 
-    version :  '000.001.039',
+    version :  '000.001.040',
     
     // Import parameters        
     dummy: false,
-    maxFileSize:  2000000000,   
+    last_processed: 'kms3696 8bit',
+    maxFileSize:  3000000000, // ---> control on size does'nt work??!! -> try with kms3696 8bit  
     solrParamsImportAll: {
                 //'q': 'invnumber%3Akms*+AND+(type%3A".tif"+OR+type%3A".jpg")',
                 //'q': 'invnumber:kms* AND (type:".tif" OR type:".jpg")',

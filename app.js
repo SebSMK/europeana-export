@@ -21,6 +21,7 @@ var route_imgsrv_add = require('./routes/imgsrv_add')(app, io);
 var route_imgsrv_add_test = require('./routes/test_add')(app, io);
 var route_imgsrv_get_test = require('./routes/test_zoom')(app, io);
 var route_tag_get = require('./routes/tag_get')(app, io);
+var route_proxy = require('./routes/proxy')(app, io);
 var route_index = require('./routes/index');
 var route_searching = require('./routes/searching');
 var route_imgsrv = require('./routes/imgsrv');

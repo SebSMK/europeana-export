@@ -70,7 +70,7 @@ module.exports = function(router, io) {
                     var maxCount = 0;
                     var objectedItems = [];
                     for (var facet in solrResponse.facet_counts.facet_fields['invnumber']) {
-                        sendInterfaceMessage("facet: " + facet);
+                        logger.info("facet: " + facet);
                                                 
                         if(!util.isValidDataText(facet))
                           continue;
@@ -94,7 +94,15 @@ module.exports = function(router, io) {
                         sendInterfaceMessage("addAll - solr says:" + objectedItems.length);
 
                         var artwork2Process = [];
+                        var reach_last_processed = util.isValidDataText(config.last_processed);
                         for (var i = 0, l = objectedItems.length; i < l; i++) {
+                            
+                            if(reach_last_processed){
+                              if(objectedItems[i].facet == config.last_processed)
+                                reach_last_processed = false;                              
+                              continue;
+                            }
+                            
                             var pyrconv = new converter();
                             var params = {};
                             params.invnumber = objectedItems[i].facet;
