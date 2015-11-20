@@ -3,6 +3,36 @@ var config = {
 
     version :  '000.001.040',
     
+    // proxy
+    options: {
+      validHttpMethods: ['GET'],
+      //validPaths: ['solr-example/dev_DAM/select', ''],
+      invalidParams: ['qt', 'stream'],
+      backend_user_tags: {
+        host: 'solr-02.smk.dk',
+        port: 8080,
+        path: '/solr-h4dk/prod_search_pict',
+        query: {
+          'q': '{!join from=picture_url to=picture_url}prev_q:',
+          'facet': true,
+          'facet.field':['prev_q'],
+          'facet.mincount':1,
+          'facet.limit':-1,
+          'rows':'0', 
+          'wt':'json',
+          'indent':true,
+          'json.nl':'map'            
+        }              
+      },                  
+      
+      backend: { // HARD-CODED!!!!!!
+        host: 'csdev-seb',
+        port: 8180,
+        path: '/solr-example/dev_DAM'
+      }
+    },
+    
+    
     // Import parameters        
     dummy: false,
     last_processed: 'kms3696 8bit',
