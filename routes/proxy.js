@@ -15,36 +15,6 @@ request = require('request'),
 solr = require('solr-client'),
 url = require('url');
 
-
-/*
-var options = {
-      validHttpMethods: ['GET'],
-      //validPaths: ['solr-example/dev_DAM/select', ''],
-      invalidParams: ['qt', 'stream'],
-      backend_user_tags: {
-        host: 'solr-02.smk.dk',
-        port: 8080,
-        path: '/solr-h4dk/prod_search_pict',
-        query: {
-          'q': '{!join from=picture_url to=picture_url}prev_q:',
-          'facet': true,
-          'facet.field':['prev_q'],
-          'facet.mincount':1,
-          'facet.limit':-1,
-          'rows':'0', 
-          'wt':'json',
-          'indent':true,
-          'json.nl':'map'            
-        }              
-      },                  
-      
-      backend: { // HARD-CODED!!!!!!
-        host: 'csdev-seb',
-        port: 8180,
-        path: '/solr-example/dev_DAM'
-      }
-    }; 
-*/
 module.exports = function(router, io) {
   router.set('views', path.join(__dirname, '../views'));
   router.set('view engine', 'jade');  
@@ -75,31 +45,7 @@ module.exports = function(router, io) {
            };
     };    
   
-    var query = url.parse(req.url, true).query;
-    
-    var user_tags_connector = function(client, query){
-      var deferred = Q.defer();
-      client.get('select', query, function(err, obj){
-          
-        	if(err){
-        		logger.info(err);
-            deferred.reject(err);
-            /*
-            res.writeHead(500, 'Server intern error');
-            res.write('solrProxy says: ' + err);
-            res.end();*/
-            
-        	}else{
-        		logger.info(obj);    
-            deferred.resolve({'user_tags': obj});
-            //deferred.resolve(obj);    
-            /*res.jsonp(obj);*/                      
-        	}                      
-      });                
-      return deferred.promise;
-    };             
-    
-    
+    var query = url.parse(req.url, true).query;            
     
     if (validateRequest(req)) {
       logger.info('ALLOWED: ' + req.method + ' ' + req.url);
@@ -108,7 +54,8 @@ module.exports = function(router, io) {
       if(Object.keys(query).length > 0){
         // request on a given solr
         var backend = config.proxy.mapping[url.parse(req.params[0], true).pathname];
-        client = solr.createClient(config.options.backend[backend].host, config.options.backend[backend].port, '', config.options.backend[backend].path);      
+        //client = solr.createClient(config.options.backend[backend].host, config.options.backend[backend].port, '', config.options.backend[backend].path);
+        var connector =  config.options.backend[backend].connector.init(config.options.backend[backend]);    
       }
       else{
         // general request
@@ -122,7 +69,8 @@ module.exports = function(router, io) {
         }                        
       }
       
-      promise.push(user_tags_connector(client, query));
+      //promise.push(config.options.backend[backend].connector.handler(client, query));
+      promise.push(config.options.backend[backend].connector.handler(query));
                    
     }else {
       logger.info('DENIED: ' + req.method + ' ' + req.url);

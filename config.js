@@ -1,3 +1,5 @@
+connector_pictures_DAM = require('./connector_pictures_DAM');
+connector_users_tags = require('./connector_users_tags');
 
 var config = {
 
@@ -7,7 +9,8 @@ var config = {
     
     proxy:{
       mapping:{
-        'solr-example/dev_DAM/select': 'pictures_DAM'
+        'solr-example/dev_DAM/select': 'pictures_DAM',
+        'solr-h4dk/prod_search_pict/select': 'user_tags'
       }    
     },
     
@@ -17,6 +20,7 @@ var config = {
       invalidParams: ['qt', 'stream'],
       backend:{
         'user_tags': {
+          connector: connector_users_tags,
           host: 'solr-02.smk.dk',
           port: 8080,
           path: '/solr-h4dk/prod_search_pict',
@@ -30,9 +34,10 @@ var config = {
             'wt':'json',
             'indent':true,
             'json.nl':'map'            
-          }      
+          }   
         },
         'pictures_DAM': {
+          connector: connector_pictures_DAM,
           host: 'csdev-seb',
           port: 8180,
           path: '/solr-example/dev_DAM',
