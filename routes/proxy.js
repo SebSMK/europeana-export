@@ -48,10 +48,12 @@ var options = {
 module.exports = function(router, io) {
   router.set('views', path.join(__dirname, '../views'));
   router.set('view engine', 'jade');  
-
+  
   router.get('/proxy/*', function(req, res, next) {
   
-    var validateRequest = function(request, options) {
+    var promise = [];
+      
+    var validateRequest = function(request) {
                 
         if( Object.prototype.toString.call( request.params ) !== '[object Array]' ||
             request.params.length == 0)
@@ -59,28 +61,54 @@ module.exports = function(router, io) {
                 
         var parsedUrl = url.parse(request.params[0], true),
         path = parsedUrl.pathname,        
-        queryParams = url.parse(request.url, true).query;
+        queryParams = url.parse(request.url, true).query,
+        backend = config.proxy.mapping[url.parse(req.params[0], true).pathname];
   
-        return options.validHttpMethods.indexOf(request.method) !== -1 &&
-           //options.validPaths.indexOf(path) !== -1 &&
+        return config.options.validHttpMethods.indexOf(request.method) !== -1 &&
+           //config.options.validPaths.indexOf(path) !== -1 &&
+           backend !== undefined &&
            function(){
              for (var p in queryParams){
                var paramPrefix = p.split('.')[0]; // invalidate not just "stream", but "stream.*"
-               return options.invalidParams.indexOf(paramPrefix) === -1;
-             }
-           
+               return config.options.invalidParams.indexOf(paramPrefix) === -1;
+             }           
            };
     };    
   
     var query = url.parse(req.url, true).query;
     
-    if (validateRequest(req, config.options)) {
+    var user_tags_connector = function(client, query){
+      var deferred = Q.defer();
+      client.get('select', query, function(err, obj){
+          
+        	if(err){
+        		logger.info(err);
+            deferred.reject(err);
+            /*
+            res.writeHead(500, 'Server intern error');
+            res.write('solrProxy says: ' + err);
+            res.end();*/
+            
+        	}else{
+        		logger.info(obj);    
+            deferred.resolve({'user_tags': obj});
+            //deferred.resolve(obj);    
+            /*res.jsonp(obj);*/                      
+        	}                      
+      });                
+      return deferred.promise;
+    };             
+    
+    
+    
+    if (validateRequest(req)) {
       logger.info('ALLOWED: ' + req.method + ' ' + req.url);
-      var client;
+      var client;      
       
       if(Object.keys(query).length > 0){
-        // request on a given solr  
-        client = solr.createClient(config.options.backend.host, config.options.backend.port, '', config.options.backend.path);      
+        // request on a given solr
+        var backend = config.proxy.mapping[url.parse(req.params[0], true).pathname];
+        client = solr.createClient(config.options.backend[backend].host, config.options.backend[backend].port, '', config.options.backend[backend].path);      
       }
       else{
         // general request
@@ -89,31 +117,53 @@ module.exports = function(router, io) {
           
           // request on "user tags"
           client = solr.createClient(config.options.backend_user_tags.host, config.options.backend_user_tags.port, '', config.options.backend_user_tags.path);          
-          query = JSON.parse(JSON.stringify(config.options.backend_user_tags.query)); // cloning JSON 
-          query['q'] += req.params;                                       
+          query = JSON.parse(JSON.stringify(config.options.backend.user_tags.query)); // cloning JSON 
+          query['q'] += req.params;                                      
         }                        
       }
       
-      client.get('select', query, function(err, obj){
-        	if(err){
-        		logger.info(err);
-            res.writeHead(500, 'Server intern error');
-            res.write('solrProxy says: ' + err);
-            res.end();
-        	}else{
-        		logger.info(obj);        
-            res.jsonp(obj);        
-        	}
-      });
-      
-       
+      promise.push(user_tags_connector(client, query));
+                   
     }else {
       logger.info('DENIED: ' + req.method + ' ' + req.url);
       res.writeHead(403, 'Illegal request');
       res.write('solrProxy: access denied\n');
       res.end();
-    }      
+    } 
     
-   
+    Q.allSettled(promise).then(function(result) {
+        //loop through array of promises, add items  
+        var tosend = [];
+        var jsonResponse = {};
+        
+        result.forEach(function(prom) {
+            if (prom.state === "fulfilled") {
+                //res.write("-- SUCCESS: " + prom.value);
+                var key = extract_result_key(prom.value);
+                jsonResponse[key] = prom.value[key];
+            }
+            if (prom.state === "rejected") {
+                //res.write("-- ERROR: " + prom.reason);
+                jsonResponse[key] = prom.value[key];
+            }
+        });
+        promise = []; //empty array, since it's global.        
+        /*
+        res.writeHead(200, 'Server OK');
+        res.write('solrProxy OK.' + JSON.stringify(jsonResponse));
+        res.end();*/
+        
+        res.send(jsonResponse);
+    });     
+    
+    var extract_result_key = function(result) {
+      var keys = [];
+      for (var key in result) {
+        if (result.hasOwnProperty(key)) {
+          keys.push(key);
+        }
+      }      
+      return keys;    
+    };
   });
 }
