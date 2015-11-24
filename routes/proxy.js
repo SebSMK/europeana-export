@@ -34,13 +34,12 @@ module.exports = function(router, io) {
         queryParams = url.parse(request.url, true).query,
         backend = config.proxy.mapping[url.parse(req.params[0], true).pathname];
   
-        return config.options.validHttpMethods.indexOf(request.method) !== -1 &&
-           //config.options.validPaths.indexOf(path) !== -1 &&
-           backend !== undefined &&
+        return config.proxy.options.validHttpMethods.indexOf(request.method) !== -1 &&
+           //backend !== undefined &&
            function(){
              for (var p in queryParams){
                var paramPrefix = p.split('.')[0]; // invalidate not just "stream", but "stream.*"
-               return config.options.invalidParams.indexOf(paramPrefix) === -1;
+               return config.proxy.options.invalidParams.indexOf(paramPrefix) === -1;
              }           
            };
     };    
@@ -49,28 +48,34 @@ module.exports = function(router, io) {
     
     if (validateRequest(req)) {
       logger.info('ALLOWED: ' + req.method + ' ' + req.url);
-      var client;      
+      var client, connector;      
       
       if(Object.keys(query).length > 0){
         // request on a given solr
-        var backend = config.proxy.mapping[url.parse(req.params[0], true).pathname];
-        //client = solr.createClient(config.options.backend[backend].host, config.options.backend[backend].port, '', config.options.backend[backend].path);
-        var connector =  config.options.backend[backend].connector.init(config.options.backend[backend]);    
+        connector = config.proxy.mapping[url.parse(req.params[0], true).pathname]; 
+	promise.push(connector.handler(query, false));   
       }
       else{
         // general request
         if( Object.prototype.toString.call( req.params ) === '[object Array]' && 
             req.params.length > 0){
           
+		for (var key in config.proxy.mapping) {
+		  if (config.proxy.mapping.hasOwnProperty(key)) {
+			connector = config.proxy.mapping[key]; 
+			promise.push(connector.handler(req.params, true)); 
+		  }
+		}
+
           // request on "user tags"
+/*
           client = solr.createClient(config.options.backend_user_tags.host, config.options.backend_user_tags.port, '', config.options.backend_user_tags.path);          
           query = JSON.parse(JSON.stringify(config.options.backend.user_tags.query)); // cloning JSON 
-          query['q'] += req.params;                                      
+          query['q'] += req.params;      */                                
         }                        
       }
+
       
-      //promise.push(config.options.backend[backend].connector.handler(client, query));
-      promise.push(config.options.backend[backend].connector.handler(query));
                    
     }else {
       logger.info('DENIED: ' + req.method + ' ' + req.url);

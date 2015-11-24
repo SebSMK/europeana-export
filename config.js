@@ -8,53 +8,17 @@ var config = {
     // proxy
     
     proxy:{
+	options: {
+	      validHttpMethods: ['GET'],
+	      invalidParams: ['qt', 'stream']
+	    },
       mapping:{
-        'solr-example/dev_DAM/select': 'pictures_DAM',
-        'solr-h4dk/prod_search_pict/select': 'user_tags'
+        'solr-example/dev_DAM/select': connector_pictures_DAM,
+        'solr-h4dk/prod_search_pict/select': connector_users_tags
       }    
     },
     
-    options: {
-      validHttpMethods: ['GET'],
-      //validPaths: ['solr-example/dev_DAM/select', ''],
-      invalidParams: ['qt', 'stream'],
-      backend:{
-        'user_tags': {
-          connector: connector_users_tags,
-          host: 'solr-02.smk.dk',
-          port: 8080,
-          path: '/solr-h4dk/prod_search_pict',
-          query: {
-            'q': '{!join from=picture_url to=picture_url}prev_q:',
-            'facet': true,
-            'facet.field':['prev_q'],
-            'facet.mincount':1,
-            'facet.limit':-1,
-            'rows':'0', 
-            'wt':'json',
-            'indent':true,
-            'json.nl':'map'            
-          }   
-        },
-        'pictures_DAM': {
-          connector: connector_pictures_DAM,
-          host: 'csdev-seb',
-          port: 8180,
-          path: '/solr-example/dev_DAM',
-          query: {
-            'q': '{!join from=picture_url to=picture_url}prev_q:',
-            'facet': true,
-            'facet.field':['prev_q'],
-            'facet.mincount':1,
-            'facet.limit':-1,
-            'rows':'0', 
-            'wt':'json',
-            'indent':true,
-            'json.nl':'map'            
-          }      
-        }        
-      }
-    },
+   
     
     
     // Import parameters        
