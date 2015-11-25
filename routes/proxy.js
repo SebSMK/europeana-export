@@ -50,28 +50,23 @@ module.exports = function(router, io) {
       logger.info('ALLOWED: ' + req.method + ' ' + req.url);
       var client, connector;      
       
-      if(Object.keys(query).length > 0){
+      if(Object.keys(query).length > 0 &&
+          config.proxy.mapping[url.parse(req.params[0], true).pathname] !== undefined){
         // request on a given solr
         connector = config.proxy.mapping[url.parse(req.params[0], true).pathname]; 
-	promise.push(connector.handler(query, false));   
+	      promise.push(connector.handler(query, false));   
       }
       else{
         // general request
         if( Object.prototype.toString.call( req.params ) === '[object Array]' && 
             req.params.length > 0){
           
-		for (var key in config.proxy.mapping) {
-		  if (config.proxy.mapping.hasOwnProperty(key)) {
-			connector = config.proxy.mapping[key]; 
-			promise.push(connector.handler(req.params, true)); 
-		  }
-		}
-
-          // request on "user tags"
-/*
-          client = solr.createClient(config.options.backend_user_tags.host, config.options.backend_user_tags.port, '', config.options.backend_user_tags.path);          
-          query = JSON.parse(JSON.stringify(config.options.backend.user_tags.query)); // cloning JSON 
-          query['q'] += req.params;      */                                
+      		for (var key in config.proxy.mapping) {
+      		  if (config.proxy.mapping.hasOwnProperty(key)) {
+        			connector = config.proxy.mapping[key]; 
+        			promise.push(connector.handler(req.params, true)); 
+      		  }
+      		}                               
         }                        
       }
 
@@ -97,7 +92,9 @@ module.exports = function(router, io) {
             }
             if (prom.state === "rejected") {
                 //res.write("-- ERROR: " + prom.reason);
-                jsonResponse[key] = prom.value[key];
+                var key = extract_result_key(prom.reason);
+                jsonResponse[key] = prom.reason[key].message;
+                
             }
         });
         promise = []; //empty array, since it's global.        
@@ -106,7 +103,7 @@ module.exports = function(router, io) {
         res.write('solrProxy OK.' + JSON.stringify(jsonResponse));
         res.end();*/
         
-        res.send(jsonResponse);
+        res.jsonp(jsonResponse);
     });     
     
     var extract_result_key = function(result) {

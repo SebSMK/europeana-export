@@ -1,6 +1,7 @@
 
 var Q = require('q'),
-solr = require('solr-client');
+solr = require('solr-client'),
+sprintf = require('sprintf-js').sprintf;
 
 var connector_pictures_DAM = {
 
@@ -11,8 +12,9 @@ var connector_pictures_DAM = {
           port: 8180,
           path: '/solr-example/dev_DAM',
           def_query: {
-            'q': 'invnumber:',
+            'q': 'invnumber:%1$s OR id:%1$s',
             'wt':'json',
+            'rows': 10,
             'indent':true,
             'json.nl':'map'            
           }
@@ -29,7 +31,7 @@ var connector_pictures_DAM = {
 	var self = this;
 	if(use_def_query){
 		query = JSON.parse(JSON.stringify(this.config.def_query)); // cloning JSON 
-          	query['q'] += params;	
+          	query['q'] = sprintf(query['q'], params.toString());	
 	}else{
 		query = params;
 	}

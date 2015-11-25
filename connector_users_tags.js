@@ -15,7 +15,7 @@ var connector_users_tags = {
             'facet': true,
             'facet.field':['prev_q'],
             'facet.mincount':1,
-            'facet.limit':-1,
+            'facet.limit':40,
             'rows':'0', 
             'wt':'json',
             'indent':true,

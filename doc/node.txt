@@ -28,7 +28,7 @@ curl '172.20.1.203:4000/proxy/solr-example/dev_DAM/select?q=invnumber:kms1'
 curl '172.20.1.203:4000/proxy/solr-h4dk/prod_search_pict/select?q=prev_q:kms1'
 curl '172.20.1.203:4000/proxy/solr-h4dk/prod_search_pict/select?q=%7B!join+from=picture_url+to=picture_url%7Dprev_q:kms1'
 curl '172.20.1.203:4000/proxy/solr-h4dk/prod_search_pict/select?q=%7B!join+from%3Dpicture_url+to%3Dpicture_url%7Dprev_q%3Akms1&rows=0&wt=json&indent=true&facet=true&facet.field=prev_q'
-
+curl '172.20.1.203:4000/proxy/kms1'
 
 
 *** CONVERT IMAGE
