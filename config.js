@@ -1,5 +1,6 @@
 connector_pictures_DAM = require('./connector_pictures_DAM');
 connector_users_tags = require('./connector_users_tags');
+connector_doc_smk = require('./connector_doc_smk');
 
 var config = {
 
@@ -8,18 +9,16 @@ var config = {
     // proxy
     
     proxy:{
-	options: {
-	      validHttpMethods: ['GET'],
-	      invalidParams: ['qt', 'stream']
-	    },
-      mapping:{
-        'solr-example/dev_DAM/select': connector_pictures_DAM,
-        'solr-h4dk/prod_search_pict/select': connector_users_tags
-      }    
-    },
-    
-   
-    
+  	   options: {
+  	      validHttpMethods: ['GET'],
+  	      invalidParams: ['qt', 'stream']
+  	    },
+        mapping:{
+          'solr-example/dev_DAM/select': connector_pictures_DAM,
+          'solr-h4dk/prod_search_pict/select': connector_users_tags,
+          'solr/gettingstarted_shard1_replica1/select': connector_doc_smk
+        }    
+    },        
     
     // Import parameters        
     dummy: false,
@@ -68,9 +67,14 @@ var config = {
     solrDAMCore : '/solr-example/dev_DAM/',
     
     // Solr tag
+    /*
     solrTagHost : '172.20.1.94',
     solrTagPort : 8080,
     solrTagCore : '/solr-h4dk/prod_search_pict/',
+    */
+    solrTagHost: 'csdev-seb-02',
+    solrTagPort: 8983,
+    solrTagCore: '/solr/dev_TAGS_PIC/',
 
     // IIP
     IIPHost : '172.20.1.203',
@@ -89,7 +93,8 @@ var config = {
     
     // Mounts
     mnt: {fotoI: '/mnt/fotoI/',
-          fotoII: '/mnt/fotoII/'}
+          fotoII: '/mnt/fotoII/',
+	groups: '/mnt/cifs/groups/'}
         
     // MongoDB
     //mongoURL: 'mongodb://localhost:27017/DAM_PYR',

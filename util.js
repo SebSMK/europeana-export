@@ -114,6 +114,25 @@
 			arr.splice(0, 1);
 		
 		return arr;
-	};			
+	};	
+  
+  common.validateRequest = function(request, url, config) {
+                
+        if( Object.prototype.toString.call( request.params ) !== '[object Array]' ||
+            request.params.length == 0)
+          return false;
+                
+        var parsedUrl = url.parse(request.params[0], true),
+        path = parsedUrl.pathname,        
+        queryParams = url.parse(request.url, true).query;
+  
+        return config.proxy.options.validHttpMethods.indexOf(request.method) !== -1 &&
+           function(){
+             for (var p in queryParams){
+               var paramPrefix = p.split('.')[0]; // invalidate not just "stream", but "stream.*"
+               return config.proxy.options.invalidParams.indexOf(paramPrefix) === -1;
+             }           
+           };
+    };    		
 
 }));

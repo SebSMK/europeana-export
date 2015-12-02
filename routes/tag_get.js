@@ -11,12 +11,35 @@ Q = require('q'),
 fs = require('fs'),    
 Image = require('../image'),
 upath = require('upath'),
-request = require('request');
+request = require('request'),
+connector = require('../connector_users_tags');
  
 
 module.exports = function(router, io) {
   router.set('views', path.join(__dirname, '../views'));
   router.set('view engine', 'jade');  
+
+  router.get('/tag/getv2/:id', function(req, res, next) {     
+    var query = req.params.id;
+    
+    //send request
+    connector.handler(query, true)
+    .then(function(solrTagResponse) {
+        var id = connector.getconfig().id; 
+        if (solrTagResponse[id].response.numFound > 0) {
+            res.jsonp(solrTagResponse[id]);
+        }else {
+            logger.info("/tag/get tag - object not found");
+            throw ({error: "/tag/get tag - object not found"});
+        }
+    })
+    .catch(function(err) {
+        //catch and break on all errors or exceptions on all the above methods
+        logger.error('/tag/get', err);
+        res.send(version + '<br>/tag/get error: <br>' + err);
+    });
+    
+  });
 
   router.get('/tag/get/:id', function(req, res, next) {     
     // SolrDAM
@@ -49,7 +72,8 @@ module.exports = function(router, io) {
                     'q': sprintf('(picture_url%%3A*%s.jpg)', solrDAMResponse.response.docs[0].invnumber.toUpperCase()),
                     'facet':'true',
                     'facet.mincount': 1,
-                    'facet.limit': -1,                    
+                    'facet.limit': -1,
+                    'facet.sort': 'count',                    
                     'facet.field':'prev_q',
                     'rows': '0',
                     'wt': 'json',
@@ -85,47 +109,4 @@ module.exports = function(router, io) {
             res.send(version + '<br>/tag/get error: <br>' + err);
         });
   });
-  
-  
-  router.get('/tag/getTag/:id', function(req, res, next) {     
-    // solrTag
-    var solrTag = new Solr(config.solrTagHost, config.solrTagPort);
-    var solrTagPath = sprintf('%sselect?', config.solrTagCore);
-    solrParams = {
-        'q': sprintf('(picture_url%%3A*%s.jpg)', 'KMS1'),
-        'facet':'true',
-        'facet.field':'prev_facet',
-        'rows': '0',
-        'wt': 'json',
-        'indent': 'true',
-        'json.nl': 'map'
-    };
-    var solrTagReq = [];
-
-    for (var key in solrParams) {
-        if (solrParams.hasOwnProperty(key)) {
-            solrTagReq.push(sprintf('%s=%s', key, solrParams[key]));
-        }
-    }
-    logger.info("/tag/get - start solrTagPath :", solrTagPath + solrTagReq.join('&'));
-         
-    solrTag.get(solrTagPath + solrTagReq.join('&')) 
-        .then(function(solrDAMResponse) {
-            if (solrDAMResponse.response.numFound > 0) { 
-                logger.info("/tag/get - object not found :", JSON.stringify(solrDAMResponse.response.docs[0]));                                 
-                                                
-            } else {
-                logger.info("/tag/get - object not found :", req.params.id );
-                throw ({error: "/tag/get - object not found : " + req.params.id });
-            }
-        })
-        .catch(function(err) {
-            //catch and break on all errors or exceptions on all the above methods
-            logger.error('/tag/get', err);
-            res.send(version + '<br>/tag/get error: <br>' + err);
-        });
-  });
-
-
-
 }

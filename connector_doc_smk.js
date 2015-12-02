@@ -2,22 +2,16 @@ var Q = require('q'),
     solr = require('solr-client'),
     sprintf = require('sprintf-js').sprintf;
 
-var connector_pictures_DAM = {
+var connector_doc_smk = {
 
     config: {
-        id: 'pictures_DAM',
-        connector: connector_pictures_DAM,
-        host: 'csdev-seb-02',
-        port: 8983,
-        path: '/solr/dev_DAM_PIC',
+        id: 'doc_smk',
+        connector: connector_doc_smk,
+        host: '172.20.1.61',
+        port: 8984,
+        path: '/solr/gettingstarted_shard1_replica1',
         def_query: {
-            //'q': '{!join to=invnumber from=id_lower fromIndex=dev_DAM_SAFO score=max}{!edismax qf="collectorExact1^150 collectorExact2^30 collectorExact3^20 collector1^20 collector2^15 collector3^10 collector4^5"}%1$s',
-            'q': 'id:%1$s OR {!join from=invnumber to=invnumber fromIndex=dev_TAGS_PIC score=max}prev_q:%1$s OR {!join to=invnumber from=id_lower fromIndex=dev_DAM_SAFO score=max}{!edismax qf="collectorExact1^150 collectorExact2^30 collectorExact3^20 collector1^20 collector2^15 collector3^10 collector4^5"}%1$s',
-            //'fq': '{!join from=invnumber to=invnumber fromIndex=dev_search_pict}prev_q:%1$s OR {!join from=id_textS to=invnumber fromIndex=dev_SAFO}collector1:%1$s',
-            //'fq': "",
-            'sort': 'score desc',            
-            'start': 0,
-            'rows': 5,
+            'q': '%s',
             'wt': 'json',
             'indent': true,
             'json.nl': 'map'
@@ -42,14 +36,15 @@ var connector_pictures_DAM = {
             if (err) {
                 res[self.config.id] = err;
                 deferred.reject(res);
-            } else { 
+
+            } else {
                 res[self.config.id] = obj;
                 deferred.resolve(res);
             }
         });
         return deferred.promise;
     },
-
+    
     client: function(config) {
         return solr.createClient(config.host, config.port, '', config.path);
     },
@@ -60,7 +55,7 @@ var connector_pictures_DAM = {
     
     getconfig: function(){
         return this.config;
-    }  
+    }
 }
 
-module.exports = connector_pictures_DAM;
+module.exports = connector_doc_smk;

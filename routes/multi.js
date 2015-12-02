@@ -12,24 +12,29 @@ module.exports = function(router, io) {
   router.set('views', path.join(__dirname, '../views'));
   router.set('view engine', 'jade');  
   
-  router.get('/proxy/*', function(req, res, next) {
+  router.get('/multi/*', function(req, res, next) {
   
-    var promise = [];     
+    var promise = [];  
     var query = url.parse(req.url, true).query;            
     
-    if (util.validateRequest(req, url, config) &&
-      config.proxy.mapping[url.parse(req.params[0], true).pathname] !== undefined) {
-      
+    if (util.validateRequest(req, url, config)) {
       logger.info('ALLOWED: ' + req.method + ' ' + req.url);
       var connector;
-      // proxing request
-      connector = config.proxy.mapping[url.parse(req.params[0], true).pathname]; 
-      promise.push(connector.handler(query, false));         
-                   
+            
+      // init and start request on all connectors
+      if( Object.prototype.toString.call( req.params ) === '[object Array]' && 
+          req.params.length > 0){        
+    		for (var key in config.proxy.mapping) {
+    		  if (config.proxy.mapping.hasOwnProperty(key)) {
+      			connector = config.proxy.mapping[key]; 
+      			promise.push(connector.handler(req.params, true)); 
+    		  }
+    		}                               
+      }                                        
     }else {
       logger.info('DENIED: ' + req.method + ' ' + req.url);
       res.writeHead(403, 'Illegal request');
-      res.write('solrProxy: access denied\n');
+      res.write('Multiproxy: access denied\n');
       res.end();
     } 
     
@@ -51,7 +56,7 @@ module.exports = function(router, io) {
                 
             }
         });
-        promise = []; //empty array, since it's global.        
+        promise = []; //empty array, since it's global.                       
         res.jsonp(jsonResponse);
     });     
     
