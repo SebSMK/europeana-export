@@ -12,9 +12,10 @@ var connector_pictures_DAM = {
         path: '/solr/dev_DAM_PIC',
         def_query: {
             //'q': '{!join to=invnumber from=id_lower fromIndex=dev_DAM_SAFO score=max}{!edismax qf="collectorExact1^150 collectorExact2^30 collectorExact3^20 collector1^20 collector2^15 collector3^10 collector4^5"}%1$s',
-            'q': 'id:%1$s OR {!join from=invnumber to=invnumber fromIndex=dev_TAGS_PIC score=max}prev_q:%1$s OR {!join to=invnumber from=id_lower fromIndex=dev_DAM_SAFO score=max}{!edismax qf="collectorExact1^150 collectorExact2^30 collectorExact3^20 collector1^20 collector2^15 collector3^10 collector4^5"}%1$s',
+            'q': 'value:[* TO *] AND (id:%1$s^1000 OR {!join from=invnumber to=invnumber fromIndex=dev_TAGS_PIC score=max}prev_q:%1$s OR {!join to=invnumber from=id_lower fromIndex=dev_DAM_SAFO score=max}{!edismax qf="collectorExact1^150 collectorExact2^30 collectorExact3^20 collector1^20 collector2^15 collector3^10 collector4^5"}%1$s)',
             //'fq': '{!join from=invnumber to=invnumber fromIndex=dev_search_pict}prev_q:%1$s OR {!join from=id_textS to=invnumber fromIndex=dev_SAFO}collector1:%1$s',
             //'fq': "",
+            'fl': '*, score',
             'sort': 'score desc',            
             'start': 0,
             'rows': 5,

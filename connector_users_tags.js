@@ -12,7 +12,7 @@ var connector_users_tags = {
         path: '/solr/dev_TAGS_PIC',
         def_query: {
             'q': '*:*',
-            'fq': '{!join from=invnumber to=invnumber}prev_q:%1$s OR {!join from=invnumber to=invnumber fromIndex=dev_DAM_PIC}id:%1$s',
+            'fq': '{!join from=invnumber to=invnumber}prev_q:"%1$s" OR {!join from=invnumber to=invnumber fromIndex=dev_DAM_PIC}id:%1$s',
             'facet': true,
             'facet.field': ['prev_q'],
             'facet.sort': 'count',

@@ -22,6 +22,9 @@ curl '172.20.1.203:4000/post' -H 'Content-type:application/json' -d '{"id":"561e
 **** magick
 convert 'dep544.tif' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:dep544_pyr.tif'
 
+
+
+
 ***** test proxy
 curl '172.20.1.203:8008/solr-example/dev_DAM/select?q=invnumber:kms1'
 curl '172.20.1.203:4000/proxy/solr-example/dev_DAM/select?q=invnumber:kms1'
