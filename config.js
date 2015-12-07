@@ -5,9 +5,15 @@ connector_doc_smk = require('./connector_doc_smk');
 var config = {
 
     version :  '000.001.040',
+            
+    // dam
+    dam:{  	   
+          'foto': connector_pictures_DAM,
+          'tags': connector_users_tags,
+          'doc': connector_doc_smk            
+    },   
     
     // proxy
-    
     proxy:{
   	   options: {
   	      validHttpMethods: ['GET'],

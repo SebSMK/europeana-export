@@ -8,11 +8,86 @@ Q = require('q'),
 solr = require('solr-client'),
 url = require('url');
 
+var extract_result_key = function(result) {
+  var keys = [];
+  for (var key in result) {
+    if (result.hasOwnProperty(key)) {
+      keys.push(key);
+    }
+  }      
+  return keys;    
+};
+
 module.exports = function(router, io) {
   router.set('views', path.join(__dirname, '../views'));
   router.set('view engine', 'jade');  
   
-  router.get('/multi/*', function(req, res, next) {
+  router.get('/dam/foto/:id', function(req, res, next) {
+  
+    var promise = [], connector, jsonResponse = {};           
+    var id = req.params.id; 
+    var fotokey = 'foto';         
+        
+    logger.info('ALLOWED: ' + req.method + ' ' + req.url);
+
+    if (config.dam.hasOwnProperty(fotokey)) {
+      var deferred = Q.defer();
+      var invnumber;			
+      connector = config.dam[fotokey];
+      var query = connector.getconfig().def_query; 
+      query['q'] = sprintf('id:%s', id);
+      
+      return connector.handler(query)
+      .then(function(result){
+        // image connector                                
+        var connid = connector.getconfig().id;
+        var res = result[connid];
+        if(res.response.numFound > 0){
+          jsonResponse[connid] = res;
+          deferred.resolve(res.response.docs[0].invnumber);  
+        }else{
+          deferred.reject(sprintf('Igen foto svarer til id=%s', id));
+        }; 
+        
+        return deferred.promise;                                           
+      })
+      .then(function(invnumber){
+        // other connectors
+        for (var key in config.dam) {
+    		  if (config.dam.hasOwnProperty(key) && key != fotokey) {
+      			connector = config.dam[key];                                    
+      			promise.push(connector.handler([invnumber], true)); 
+    		  }
+    		}
+        
+        Q.allSettled(promise).then(function(result) {
+          //loop through array of promises, add items           
+          result.forEach(function(prom) {
+              if (prom.state === "fulfilled") {
+                  //res.write("-- SUCCESS: " + prom.value);
+                  var key = extract_result_key(prom.value);
+                  jsonResponse[key] = prom.value[key];
+              }
+              if (prom.state === "rejected") {
+                  //res.write("-- ERROR: " + prom.reason);
+                  var key = extract_result_key(prom.reason);
+                  jsonResponse[key] = prom.reason[key].message;                  
+              }
+          });
+          promise = []; //empty array, since it's global.                       
+          res.jsonp(jsonResponse);
+        });                          
+      })
+      .catch(function (error) {
+        logger.info(error);
+        res.writeHead(404, 'Not found');
+        res.write(sprintf('DAM: %s', error));
+        res.end();        
+      })      
+    }                                                                  
+  });
+  
+  router.get('/dam/search/*', function(req, res, next) {
   
     var promise = [];  
     var query = url.parse(req.url, true).query;            
@@ -40,7 +115,6 @@ module.exports = function(router, io) {
     
     Q.allSettled(promise).then(function(result) {
         //loop through array of promises, add items  
-        var tosend = [];
         var jsonResponse = {};
         
         result.forEach(function(prom) {
@@ -58,16 +132,6 @@ module.exports = function(router, io) {
         });
         promise = []; //empty array, since it's global.                       
         res.jsonp(jsonResponse);
-    });     
-    
-    var extract_result_key = function(result) {
-      var keys = [];
-      for (var key in result) {
-        if (result.hasOwnProperty(key)) {
-          keys.push(key);
-        }
-      }      
-      return keys;    
-    };
+    });             
   });
 }
