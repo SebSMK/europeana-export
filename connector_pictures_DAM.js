@@ -12,16 +12,18 @@ var connector_pictures_DAM = {
         path: '/solr/dev_DAM_PIC',
         def_query: {
             //'q': '{!join to=invnumber from=id_lower fromIndex=dev_DAM_SAFO score=max}{!edismax qf="collectorExact1^150 collectorExact2^30 collectorExact3^20 collector1^20 collector2^15 collector3^10 collector4^5"}%1$s',
-            'q': 'value:[* TO *] AND ({!join from=invnumber to=invnumber fromIndex=dev_TAGS_PIC score=max}prev_q:%1$s OR {!join to=invnumber from=id_lower fromIndex=dev_DAM_SAFO score=max}{!edismax qf="collectorExact1^150 collectorExact2^30 collectorExact3^20 collector1^20 collector2^15 collector3^10 collector4^5"}%1$s)',
-            //'fq': '{!join from=invnumber to=invnumber fromIndex=dev_search_pict}prev_q:%1$s OR {!join from=id_textS to=invnumber fromIndex=dev_SAFO}collector1:%1$s',
-            //'fq': "",
+            //'q': 'value:[* TO *] AND ({!join from=invnumber to=invnumber fromIndex=dev_TAGS_PIC score=max}prev_q:%1$s OR {!join to=invnumber from=id_lower fromIndex=dev_DAM_SAFO score=max}{!edismax qf="collectorExact1^150 collectorExact2^30 collectorExact3^20 collector1^20 collector2^15 collector3^10 collector4^5"}%1$s)',
+            //'q': '&q={!join from=invnumber to=invnumber fromIndex=dev_TAGS_PIC score=max v=prev_q:"%1$s"}', //OR {!join to=invnumber from=id_lower fromIndex=dev_DAM_SAFO score=max}{!edismax qf="collectorExact1^150 collectorExact2^30 collectorExact3^20 collector1^20 collector2^15 collector3^10 collector4^5"}%1$s)',
+            'q': "&q=(({!join from=invnumber to=invnumber fromIndex=dev_TAGS_PIC score=max}{!edismax qf=prev_q v='%1$s'} OR {!join to=invnumber from=id_lower fromIndex=dev_DAM_SAFO score=max}{!edismax qf='collectorExact1^150 collectorExact2^30 collectorExact3^20 collector1^20 collector2^15 collector3^10 collector4^5'}%1$s))",            
+            'fq': 'value:[* TO *]',
             'fl': '*, score',
             'sort': 'score desc',            
             'start': 0,
             'rows': 5,
             'wt': 'json',
             'indent': true,
-            'json.nl': 'map'
+            'json.nl': 'map'                        
+            
         }
     },
 

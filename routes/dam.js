@@ -36,13 +36,15 @@ module.exports = function(router, io) {
     if (config.dam.hasOwnProperty(fotokey)) {
       var deferred = Q.defer();
       var invnumber;			
+      
+      // image connector 
       connector = config.dam[fotokey];
       var query = JSON.parse(JSON.stringify(connector.getconfig().def_query)); 
       query['q'] = sprintf('id:%s', id);
       
       return connector.handler(query)
       .then(function(result){
-        // image connector                                
+        // is there a picture with this id?                                       
         var connid = connector.getconfig().id;
         var res = result[connid];
         if(res.response.numFound > 0){
@@ -55,7 +57,7 @@ module.exports = function(router, io) {
         return deferred.promise;                                           
       })
       .then(function(invnumber){
-        // other connectors
+        // if yes, search the other connectors with corresponding inventar number
         for (var key in config.dam) {
     		  if (config.dam.hasOwnProperty(key) && key != fotokey) {
       			connector = config.dam[key];                                    
@@ -91,7 +93,7 @@ module.exports = function(router, io) {
   });
   
   /*
-  * get all connector info for a search string  
+  * search string on all connectors  
   */
   router.get('/dam/search/*', function(req, res, next) {  
     var promise = [], connector;  
