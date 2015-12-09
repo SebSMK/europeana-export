@@ -1,6 +1,7 @@
 connector_pictures_DAM = require('./connector_pictures_DAM');
 connector_users_tags = require('./connector_users_tags');
 connector_doc_smk = require('./connector_doc_smk');
+connector_CollectionSpace = require('./connector_CollectionSpace');
 
 var config = {
 
@@ -10,7 +11,8 @@ var config = {
     dam:{  	   
           'foto': connector_pictures_DAM,
           'tags': connector_users_tags,
-          'doc': connector_doc_smk            
+          'doc': connector_doc_smk,
+          'collectionspace': connector_CollectionSpace            
     },   
     
     // proxy
@@ -22,7 +24,8 @@ var config = {
         mapping:{
           'solr-example/dev_DAM/select': connector_pictures_DAM,
           'solr-h4dk/prod_search_pict/select': connector_users_tags,
-          'solr/gettingstarted_shard1_replica1/select': connector_doc_smk
+          'solr/gettingstarted_shard1_replica1/select': connector_doc_smk,
+          'solr-example/dev_SAFO/select': connector_CollectionSpace
         }    
     },        
     
