@@ -20,10 +20,10 @@ var extract_result_key = function(result) {
 
 module.exports = function(router, io) {
   router.set('views', path.join(__dirname, '../views'));
-  router.set('view engine', 'jade');  
+  router.set('view engine', 'jade');      
   
   /*
-  * get all connector info for a given picture
+  * get all connector info for a given picture and all versions of this picture
   * @id: picture's id
   */    
   router.get('/dam/foto/:id', function(req, res, next) {  
@@ -39,8 +39,12 @@ module.exports = function(router, io) {
       
       // image connector 
       connector = config.dam[fotokey];
-      var query = JSON.parse(JSON.stringify(connector.getconfig().def_query)); 
-      query['q'] = sprintf('id:%s', id);
+      var query = JSON.parse(JSON.stringify(connector.getconfig().def_query));       
+      // get all versions of the given picture
+      query['q'] = sprintf('{!join to=invnumber from=invnumber}id:%s', id);
+      query['sort'] = 'created desc';
+      query['fq'] =  'value:[* TO *]';
+      query['rows'] =  '5';      
       
       return connector.handler(query)
       .then(function(result){
@@ -139,5 +143,49 @@ module.exports = function(router, io) {
         promise = []; //empty array, since it's global.                       
         res.jsonp(jsonResponse);
     });             
+  });
+  
+  /*
+  * get all versions of a given picture
+  * @id: picture's id
+  */    
+  router.get('/dam/versions/:id', function(req, jsonres, next) {  
+    var promise = [], connector, jsonResponse = {};           
+    var id = req.params.id; 
+    var fotokey = 'foto';         
+        
+    logger.info('ALLOWED: ' + req.method + ' ' + req.url);
+
+    if (config.dam.hasOwnProperty(fotokey)) {            		
+      
+      // image connector 
+      connector = config.dam[fotokey];
+      var query = JSON.parse(JSON.stringify(connector.getconfig().def_query)); 
+      query['q'] = sprintf('{!join to=invnumber from=invnumber}id:%s', id);
+      query['sort'] = 'created desc';
+      query['fq'] =  'value:[* TO *]';
+      
+      return connector.handler(query)
+      .then(function(result){                                      
+        var connid = connector.getconfig().id;
+        var res = result[connid];
+        if(res.response.numFound > 0){  
+          jsonResponse[sprintf('versions_%s', connid)] = res;
+          jsonres.jsonp(jsonResponse);            
+        }else{
+          var error = sprintf('Igen foto svarer til id=%s', id);
+          logger.info(error);
+          jsonres.writeHead(404, 'Not found');
+          jsonres.write(sprintf('DAM: %s', error));
+          jsonres.end();        
+        };                                                       
+      })      
+      .catch(function (error) {
+        logger.info(error);
+        jsonres.writeHead(500, 'Server error');
+        jsonres.write(sprintf('DAM: %s', error));
+        jsonres.end();        
+      })      
+    }                                                                  
   });
 }

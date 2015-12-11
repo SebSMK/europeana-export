@@ -12,6 +12,8 @@ var connector_doc_smk = {
         path: '/solr/gettingstarted_shard1_replica1',
         def_query: {
             'q': '%s',
+            'start': 0,
+            'rows': 20,
             'wt': 'json',
             'indent': true,
             'json.nl': 'map'
