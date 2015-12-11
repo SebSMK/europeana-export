@@ -53,7 +53,7 @@ var connector_doc_smk = {
               var paramPrefix = p.split('.')[0]; 
               
               switch(paramPrefix) {
-                case 'search':
+                case 'q':
                   query['q'] = sprintf(query['q'], params[p].toString());
                   break;                  
                 default:

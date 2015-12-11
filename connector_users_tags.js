@@ -53,8 +53,8 @@ var connector_users_tags = {
        if (use_def_query) {                   
             query = JSON.parse(JSON.stringify(this.config.def_query)); // cloning JSON
             
-            if(params.hasOwnProperty('search'))
-              query['fq'] = sprintf(query['fq'], params['search'].toString());
+            if(params.hasOwnProperty('q'))
+              query['fq'] = sprintf(query['fq'], params['q'].toString());
                                        
         } else {
             query = params;

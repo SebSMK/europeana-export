@@ -26,9 +26,10 @@ module.exports = function(router, io) {
   * get all connector info for a given picture and all versions of this picture
   * @id: picture's id
   */    
-  router.get('/dam/foto/:id', function(req, res, next) {  
-    var promise = [], connector, jsonResponse = {};           
-    var id = req.params.id; 
+  router.get('/dam/foto/*', function(req, res, next) {  
+    var promise = [], connector, jsonResponse = {}; 
+    var params = url.parse(req.url, true).query;           
+    var id = params['q']; 
     var fotokey = 'foto';         
         
     logger.info('ALLOWED: ' + req.method + ' ' + req.url);
@@ -44,7 +45,7 @@ module.exports = function(router, io) {
       query['q'] = sprintf('{!join to=invnumber from=invnumber}id:%s', id);
       query['sort'] = 'created desc';
       query['fq'] =  'value:[* TO *]';
-      query['rows'] =  '5';      
+      //query['rows'] =  '5';      
       
       return connector.handler(query)
       .then(function(result){
@@ -64,8 +65,9 @@ module.exports = function(router, io) {
         // if yes, search the other connectors with corresponding inventar number
         for (var key in config.dam) {
     		  if (config.dam.hasOwnProperty(key) && key != fotokey) {
-      			connector = config.dam[key];                                    
-      			promise.push(connector.handler([invnumber], true)); 
+      			connector = config.dam[key];
+            params['q'] = invnumber;                                    
+      			promise.push(connector.handler(params, true)); 
     		  }
     		}
         
