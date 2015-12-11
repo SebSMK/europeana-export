@@ -33,12 +33,8 @@ var connector_pictures_DAM = {
         var res = {},
             query = {};
         var self = this;
-        if (use_def_query) {
-            query = JSON.parse(JSON.stringify(this.config.def_query)); // cloning JSON 
-            query['q'] = sprintf(query['q'], params.toString());
-        } else {
-            query = params;
-        }
+       
+        query = self.queryhandler(params, use_def_query);
 
         client.get('select', query, function(err, obj) {
 
@@ -51,6 +47,28 @@ var connector_pictures_DAM = {
             }
         });
         return deferred.promise;
+    },
+
+    queryhandler: function(params, use_def_query){
+       var query = {};
+       if (use_def_query) {                   
+            query = JSON.parse(JSON.stringify(this.config.def_query)); // cloning JSON
+            
+            for (var p in params){
+              var paramPrefix = p.split('.')[0]; 
+              
+              switch(paramPrefix) {
+                case 'search':
+                  query['q'] = sprintf(query['q'], params[p].toString());
+                  break;                  
+                default:
+                  query[paramPrefix] = params[p];                      
+              }                                                           
+            }                          
+        } else {
+            query = params;
+        }            
+        return query;
     },
 
     client: function(config) {

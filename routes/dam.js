@@ -101,21 +101,22 @@ module.exports = function(router, io) {
   */
   router.get('/dam/search/*', function(req, res, next) {  
     var promise = [], connector;  
-    var query = url.parse(req.url, true).query;            
+    var params = url.parse(req.url, true).query;            
     
     if (util.validateRequest(req, url, config)) {
       logger.info('ALLOWED: ' + req.method + ' ' + req.url);      
             
       // init and start request on all connectors
-      if( Object.prototype.toString.call( req.params ) === '[object Array]' && 
-          req.params.length > 0){        
+      //if( Object.prototype.toString.call( req.params ) === '[object Array]' && 
+      //    req.params.length > 0){        
     		for (var key in config.dam) {
     		  if (config.dam.hasOwnProperty(key)) {
       			connector = config.dam[key]; 
-      			promise.push(connector.handler(req.params, true)); 
+      			//promise.push(connector.handler(req.params, true));
+            promise.push(connector.handler(params, true)); 
     		  }
     		}                               
-      }                                        
+      //}                                        
     }else {
       logger.info('DENIED: ' + req.method + ' ' + req.url);
       res.writeHead(403, 'Illegal request');
