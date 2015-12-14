@@ -28,8 +28,8 @@ module.exports = function(router, io) {
   */    
   router.get('/dam/foto/*', function(req, res, next) {  
     var promise = [], connector, jsonResponse = {}; 
-    var params = url.parse(req.url, true).query;           
-    var id = params['q']; 
+    var query = url.parse(req.url, true).query;           
+    var id = query['q']; 
     var fotokey = 'foto';         
         
     logger.info('ALLOWED: ' + req.method + ' ' + req.url);
@@ -40,14 +40,51 @@ module.exports = function(router, io) {
       
       // image connector 
       connector = config.dam[fotokey];
-      var query = JSON.parse(JSON.stringify(connector.getconfig().def_query));       
-      // get all versions of the given picture
-      query['q'] = sprintf('{!join to=invnumber from=invnumber}id:%s', id);
-      query['sort'] = 'created desc';
-      query['fq'] =  'value:[* TO *]';
-      //query['rows'] =  '5';      
       
-      return connector.handler(query)
+      // special query handler for image connector                     
+      var queryhandler = function(params){
+        
+        var query_pattern = { 
+          def:{                                                                        
+            'wt': 'json',
+            'indent': true,
+            'json.nl': 'map'             
+          },         
+          fixed:{
+            'q': '{!join to=invnumber from=invnumber}id:%s',
+            'sort': 'created desc',
+            'fq': 'value:[* TO *]'                
+          }
+        };
+        
+        // set variables elements of the query
+        var query = JSON.parse(JSON.stringify(query_pattern.def)); // cloning JSON            
+        for (var p in params){
+          switch(p) {
+            case 'wt':
+            case 'indent':
+            case 'json.nl':
+              query[p] = params[p];
+              break;                                                              
+          }                                                                                                         
+        } 
+            
+        // set fixed elements of the query 
+        for (var f in query_pattern.fixed){              
+          switch(f) {
+            case 'q':
+              query[f] = sprintf(query_pattern.fixed[f], params[f].toString());
+              break;
+            default:
+              query[f] = query_pattern.fixed[f];                                                  
+          }                                                           
+        }                  
+                  
+        return query;
+    };
+    
+     // get all versions of the given picture  
+    return connector.handler(query, null, queryhandler)
       .then(function(result){
         // is there a picture with this id?                                       
         var connid = connector.getconfig().id;
@@ -66,6 +103,7 @@ module.exports = function(router, io) {
         for (var key in config.dam) {
     		  if (config.dam.hasOwnProperty(key) && key != fotokey) {
       			connector = config.dam[key];
+            var params = JSON.parse(JSON.stringify(query));
             params['q'] = invnumber;                                    
       			promise.push(connector.handler(params, true)); 
     		  }

@@ -10,17 +10,49 @@ var connector_CollectionSpace = {
         host: 'csdev-seb-02',
         port: 8983,
         path: '/solr/dev_DAM_SAFO',
-        def_query: {
-            'q': '%1$s',            
-            'qf': 'id_lower',
-            'defType': 'edismax',
-            'fl': '*, score',            
-            'start': 0,
-            'rows': 1,
+        query:{
+          def: {            
+            'fl': '*, score',                        
             'wt': 'json',
             'indent': true,
             'json.nl': 'map'            
+          },
+          fixed: {
+            'q': '%1$s',            
+            'qf': 'id_lower',
+            'defType': 'edismax',
+            'start': 0,
+            'rows': 1,
+            'fq': '*'
+          }
         }
+    },
+    
+    queryhandler: function(params, use_def_query){
+       var query = {};
+       if (use_def_query) {                   
+            
+            // set variables elements of the query
+            query = JSON.parse(JSON.stringify(this.config.query.def)); // cloning JSON            
+            for (var p in params){              
+              query[p] = params[p];                                                                         
+            } 
+            
+            // set fixed elements of the query            
+            for (var f in this.config.query.fixed){              
+              switch(f) {
+                case 'q':
+                  query[f] = sprintf(this.config.query.fixed[f], params[f].toString());
+                  break;
+                default:
+                  query[f] = this.config.query.fixed[f];                                                  
+              }                                                           
+            } 
+                                     
+        } else {
+            query = params;
+        }            
+        return query;
     },
 
     handler: function(params, use_def_query) {
@@ -43,29 +75,7 @@ var connector_CollectionSpace = {
             }
         });
         return deferred.promise;
-    },
-
-    queryhandler: function(params, use_def_query){
-       var query = {};
-       if (use_def_query) {                   
-            query = JSON.parse(JSON.stringify(this.config.def_query)); // cloning JSON
-            
-            for (var p in params){
-              var paramPrefix = p.split('.')[0]; 
-              
-              switch(paramPrefix) {
-                case 'q':
-                  query['q'] = sprintf(query['q'], params[p].toString());
-                  break;                  
-                default:
-                  query[paramPrefix] = params[p];                      
-              }                                                           
-            }                          
-        } else {
-            query = params;
-        }            
-        return query;
-    },
+    },   
 
     client: function(config) {
         return solr.createClient(config.host, config.port, '', config.path);

@@ -9,16 +9,46 @@ var connector_doc_smk = {
         connector: connector_doc_smk,
         host: '172.20.1.61',
         port: 8984,
-        path: '/solr/gettingstarted_shard1_replica1',
-        def_query: {
-            'q': '%s',
-            'start': 0,
-            'rows': 20,
-            'fl': 'score, id, author, creation_date, resourcename, page_count, word_count, compagny',
+        path: '/solr/gettingstarted_shard1_replica1',       
+        query:{
+          def: {                                                
             'wt': 'json',
             'indent': true,
-            'json.nl': 'map'
+            'json.nl': 'map'            
+          },
+          fixed: {
+            'q': '%s',
+            'fq': '*',
+            'fl': 'score, id, author, creation_date, resourcename, page_count, word_count, compagny'
+          }
         }
+    },
+
+    queryhandler: function(params, use_def_query){
+       var query = {};
+       if (use_def_query) {                   
+            
+            // set variables elements of the query
+            query = JSON.parse(JSON.stringify(this.config.query.def)); // cloning JSON            
+            for (var p in params){              
+              query[p] = params[p];                                                                         
+            } 
+            
+            // set fixed elements of the query            
+            for (var f in this.config.query.fixed){              
+              switch(f) {
+                case 'q':
+                  query[f] = sprintf(this.config.query.fixed[f], params[f].toString());
+                  break;
+                default:
+                  query[f] = this.config.query.fixed[f];                                                  
+              }                                                           
+            } 
+                                     
+        } else {
+            query = params;
+        }            
+        return query;
     },
 
     handler: function(params, use_def_query) {
@@ -42,29 +72,7 @@ var connector_doc_smk = {
             }
         });
         return deferred.promise;
-    },
-    
-    queryhandler: function(params, use_def_query){
-       var query = {};
-       if (use_def_query) {                   
-            query = JSON.parse(JSON.stringify(this.config.def_query)); // cloning JSON
-            
-            for (var p in params){
-              var paramPrefix = p.split('.')[0]; 
-              
-              switch(paramPrefix) {
-                case 'q':
-                  query['q'] = sprintf(query['q'], params[p].toString());
-                  break;                  
-                default:
-                  query[paramPrefix] = params[p];                      
-              }                                                           
-            }                          
-        } else {
-            query = params;
-        }            
-        return query;
-    },
+    },    
     
     client: function(config) {
         return solr.createClient(config.host, config.port, '', config.path);

@@ -9,8 +9,14 @@ var connector_users_tags = {
         connector: connector_users_tags,
          host: 'csdev-seb-02',
         port: 8983,
-        path: '/solr/dev_TAGS_PIC',
-        def_query: {
+        path: '/solr/dev_TAGS_PIC',        
+        query:{
+          def: {                                                
+            'wt': 'json',
+            'indent': true,
+            'json.nl': 'map'            
+          },
+          fixed: {
             'q': '*:*',
             'fq': '{!join from=invnumber to=invnumber}prev_q:"%1$s" OR invnumber:%1$s',
             'facet': true,
@@ -22,9 +28,41 @@ var connector_users_tags = {
             'wt': 'json',
             'indent': true,
             'json.nl': 'map'
+          }
         }
     },
-
+    
+    queryhandler: function(params, use_def_query){
+       var query = {};
+       if (use_def_query) {                   
+            
+            // set variables elements of the query
+            query = JSON.parse(JSON.stringify(this.config.query.def)); // cloning JSON            
+            for (var p in params){              
+              query[p] = params[p];                                                                         
+            } 
+            
+            // set fixed elements of the query            
+            for (var f in this.config.query.fixed){              
+              switch(f) {
+                case 'q':
+                  query['q'] = this.config.query.fixed['q'];
+                  if(params.hasOwnProperty('q'))
+                    query['fq'] = sprintf(this.config.query.fixed['fq'], params['q'].toString());                  
+                  break;
+                case 'fq':
+                  break;
+                default:
+                  query[f] = this.config.query.fixed[f];                                                  
+              }                                                           
+            } 
+                                     
+        } else {
+            query = params;
+        }            
+        return query;
+    },
+    
     handler: function(params, use_def_query) {
         var deferred = Q.defer();
         var client = this.client(this.config);
@@ -47,21 +85,7 @@ var connector_users_tags = {
         });
         return deferred.promise;
     },
-    
-    queryhandler: function(params, use_def_query){
-       var query = {};
-       if (use_def_query) {                   
-            query = JSON.parse(JSON.stringify(this.config.def_query)); // cloning JSON
-            
-            if(params.hasOwnProperty('q'))
-              query['fq'] = sprintf(query['fq'], params['q'].toString());
-                                       
-        } else {
-            query = params;
-        }            
-        return query;
-    },
-    
+       
     client: function(config) {
         return solr.createClient(config.host, config.port, '', config.path);
     },
