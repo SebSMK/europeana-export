@@ -45,7 +45,9 @@ module.exports = function(router, io) {
       var queryhandler = function(params){
         
         var query_pattern = { 
-          def:{                                                                        
+          def:{
+            'start': 0,
+            'rows': 1,                                                                        
             'wt': 'json',
             'indent': true,
             'json.nl': 'map'             
@@ -61,6 +63,8 @@ module.exports = function(router, io) {
         var query = JSON.parse(JSON.stringify(query_pattern.def)); // cloning JSON            
         for (var p in params){
           switch(p) {
+            case 'start':
+            case 'rows':
             case 'wt':
             case 'indent':
             case 'json.nl':
@@ -91,7 +95,7 @@ module.exports = function(router, io) {
         var res = result[connid];
         if(res.response.numFound > 0){
           jsonResponse[connid] = res;
-          deferred.resolve(res.response.docs[0].invnumber);  
+          deferred.resolve(res.response.docs.length > 0 ? res.response.docs[0].invnumber : null);  
         }else{
           deferred.reject(sprintf('Igen foto svarer til id=%s', id));
         }; 
@@ -104,7 +108,7 @@ module.exports = function(router, io) {
     		  if (config.dam.hasOwnProperty(key) && key != fotokey) {
       			connector = config.dam[key];
             var params = JSON.parse(JSON.stringify(query));
-            params['q'] = invnumber;                                    
+            params['q'] = [invnumber];                                    
       			promise.push(connector.handler(params, true)); 
     		  }
     		}

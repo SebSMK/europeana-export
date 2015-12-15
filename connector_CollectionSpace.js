@@ -11,20 +11,20 @@ var connector_CollectionSpace = {
         port: 8983,
         path: '/solr/dev_DAM_SAFO',
         query:{
-          def: {            
-            'fl': '*, score',                        
+          def: {                                   
             'wt': 'json',
             'indent': true,
             'json.nl': 'map'            
           },
           fixed: {
             'q': '%1$s',            
-            'qf': 'id_lower',
+            'qf': 'id_lower',            
+            'fl': '*, score', 
             'defType': 'edismax',
             'start': 0,
-            'rows': 1,
-            'fq': '*'
-          }
+            'rows': 1
+          },
+          exclude: ['fq']
         }
     },
     
@@ -35,7 +35,8 @@ var connector_CollectionSpace = {
             // set variables elements of the query
             query = JSON.parse(JSON.stringify(this.config.query.def)); // cloning JSON            
             for (var p in params){              
-              query[p] = params[p];                                                                         
+              if(this.config.query.exclude !== undefined && this.config.query.exclude.indexOf(p) == -1) // only if the parameter is not in the exclude list
+                query[p] = params[p];                                                                         
             } 
             
             // set fixed elements of the query            

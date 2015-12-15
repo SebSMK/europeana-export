@@ -17,10 +17,12 @@ var connector_doc_smk = {
             'json.nl': 'map'            
           },
           fixed: {
+            'facet': false,
             'q': '%s',
             'fq': '*',
             'fl': 'score, id, author, creation_date, resourcename, page_count, word_count, compagny'
-          }
+          },
+          exclude: ['qf']
         }
     },
 
@@ -30,8 +32,9 @@ var connector_doc_smk = {
             
             // set variables elements of the query
             query = JSON.parse(JSON.stringify(this.config.query.def)); // cloning JSON            
-            for (var p in params){              
-              query[p] = params[p];                                                                         
+            for (var p in params){
+              if(this.config.query.exclude !== undefined && this.config.query.exclude.indexOf(p) == -1) // only if the parameter is not in the exclude list             
+                query[p] = params[p];                                                                         
             } 
             
             // set fixed elements of the query            

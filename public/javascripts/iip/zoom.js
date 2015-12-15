@@ -11,8 +11,7 @@
 
   	image: image,
 		server: server,
-		credit: credit, 
-		scale: 7.17,
+		credit: credit,
 		showNavWindow: true,
 		showNavButtons: true,
 		winResize: true,

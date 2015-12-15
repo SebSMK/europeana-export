@@ -24,11 +24,8 @@ var connector_users_tags = {
             'facet.sort': 'count',
             'facet.mincount': 1,
             'facet.limit': 40,
-            'rows': '0',
-            'wt': 'json',
-            'indent': true,
-            'json.nl': 'map'
-          }
+            'rows': '0'
+          }          
         }
     },
     
@@ -38,9 +35,15 @@ var connector_users_tags = {
             
             // set variables elements of the query
             query = JSON.parse(JSON.stringify(this.config.query.def)); // cloning JSON            
-            for (var p in params){              
-              query[p] = params[p];                                                                         
-            } 
+            for (var p in params){
+              switch(p) {
+                case 'wt':
+                case 'indent':
+                case 'json.nl':
+                  query[p] = params[p];
+                  break;                                                              
+              }                                                                                                         
+            }  
             
             // set fixed elements of the query            
             for (var f in this.config.query.fixed){              
@@ -48,14 +51,14 @@ var connector_users_tags = {
                 case 'q':
                   query['q'] = this.config.query.fixed['q'];
                   if(params.hasOwnProperty('q'))
-                    query['fq'] = sprintf(this.config.query.fixed['fq'], params['q'].toString());                  
+                    query['fq'] = sprintf(this.config.query.fixed['fq'], params['q'].toString() == '*:*' ? '*' : params['q'].toString());                  
                   break;
                 case 'fq':
                   break;
                 default:
                   query[f] = this.config.query.fixed[f];                                                  
               }                                                           
-            } 
+            }
                                      
         } else {
             query = params;
