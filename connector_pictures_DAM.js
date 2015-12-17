@@ -11,8 +11,7 @@ var connector_pictures_DAM = {
         port: 8983,
         path: '/solr/dev_DAM_PIC',
         query:{
-          def:{                                    
-            //'fq': 'value:[* TO *]',
+          def:{                        
             'fl': '*, score',                        
             'wt': 'json',
             'indent': true,
@@ -31,8 +30,20 @@ var connector_pictures_DAM = {
             
             // set variables elements of the query
             query = JSON.parse(JSON.stringify(this.config.query.def)); // cloning JSON            
-            for (var p in params){              
-              query[p] = params[p];                                                                         
+            for (var f in params){             
+              switch(f) {
+                case 'fq':
+                  for(var i in params[f]){
+                    if(params[f][i].indexOf('id:') > -1)
+                      params[f][i] = params[f][i].replace('id:', 'invnumber:').toLowerCase();                                                                  
+                  }
+                  query[f] = params[f];
+                  
+                  break;
+                default:
+                  query[f] = params[f];                                                  
+              }                 
+                                                                                       
             } 
             
             // set fixed elements of the query            

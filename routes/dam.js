@@ -156,8 +156,8 @@ module.exports = function(router, io) {
     		for (var key in config.dam) {
     		  if (config.dam.hasOwnProperty(key)) {
       			connector = config.dam[key]; 
-      			//promise.push(connector.handler(req.params, true));
-            promise.push(connector.handler(params, true)); 
+      			var origParams = JSON.parse(JSON.stringify(params));
+            promise.push(connector.handler(origParams, true)); 
     		  }
     		}                               
       //}                                        

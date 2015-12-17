@@ -42,11 +42,19 @@ var connector_doc_smk = {
               switch(f) {
                 case 'q':
                   query[f] = sprintf(this.config.query.fixed[f], params[f].toString());
-                  break;
+                  break;                                
                 default:
                   query[f] = this.config.query.fixed[f];                                                  
               }                                                           
             } 
+            
+            // if fq on id:, copy fq value to q
+            if(params.hasOwnProperty('fq')){
+              for(var i in params['fq']){
+                if(params['fq'][i].indexOf('id:') > -1)
+                  query['q'] = sprintf(this.config.query.fixed['q'], params['fq'][i].split(':').pop());                                                                  
+              }            
+            }                 
                                      
         } else {
             query = params;

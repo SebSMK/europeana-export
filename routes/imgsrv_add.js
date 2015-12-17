@@ -114,6 +114,7 @@ module.exports = function(router, io) {
   
   router.get('/imgsrv/add/:id', 
     // loading interface and socket IO before proceeding with the route...
+      /*
       function(req, res, next) {             
            res.render('chat');  
             io.on('connection', function(socket){
@@ -125,6 +126,8 @@ module.exports = function(router, io) {
           io.sockets.emit('message', { message: 'welcome to import console ' + config.version});                                            
           next();                               
       },
+      
+      */
       // ...real stuff starting here
       function(req, res, next) {
         
@@ -159,7 +162,7 @@ module.exports = function(router, io) {
                         sendInterfaceMessage(sprintf("** start processing - %s - %s %s", params.invnumber, params.id, params.link ));                                                                                  
                         
                         promise.push(
-                         pyrconv.dummyexec(params)
+                         pyrconv.exec(params)
                           .then(
                             function(result){
                               sendInterfaceMessage(sprintf("processed - %s **", result ));

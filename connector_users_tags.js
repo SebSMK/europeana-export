@@ -51,7 +51,8 @@ var connector_users_tags = {
                 case 'q':
                   query['q'] = this.config.query.fixed['q'];
                   if(params.hasOwnProperty('q'))
-                    query['fq'] = sprintf(this.config.query.fixed['fq'], params['q'].toString() == '*:*' ? '*' : params['q'].toString());                  
+                    query['fq'] = sprintf(this.config.query.fixed['fq'], params['q'].toString() == '*:*' ? '*' : params['q'].toString());
+                                     
                   break;
                 case 'fq':
                   break;
@@ -59,6 +60,14 @@ var connector_users_tags = {
                   query[f] = this.config.query.fixed[f];                                                  
               }                                                           
             }
+            
+            // if fq on id:, copy value
+            if(params.hasOwnProperty('fq')){
+              for(var i in params['fq']){
+                if(params['fq'][i].indexOf('id:') > -1)
+                  query['fq'] = sprintf(this.config.query.fixed['fq'], params['fq'][i].split(':').pop().toLowerCase());                                                    
+              }            
+            }   
                                      
         } else {
             query = params;

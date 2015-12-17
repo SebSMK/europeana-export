@@ -24,6 +24,7 @@ var route_tag_get = require('./routes/tag_get')(app, io);
 var route_doc_get = require('./routes/doc_get')(app, io);
 var route_proxy = require('./routes/proxy')(app, io);
 var route_dam = require('./routes/dam')(app, io);
+var route_autocomplete_get = require('./routes/autocomplete_get')(app, io);
 var route_index = require('./routes/index');
 var route_searching = require('./routes/searching');
 var route_imgsrv = require('./routes/imgsrv');

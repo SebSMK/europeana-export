@@ -56,14 +56,15 @@ var connector_CollectionSpace = {
         return query;
     },
 
-    handler: function(params, use_def_query) {
+    handler: function(params, use_def_query, queryhandler) {
         var deferred = Q.defer();
         var client = this.client(this.config);
         var res = {},
             query = {};
         var self = this;
-        
-        query = self.queryhandler(params, use_def_query);                
+       
+        var getquery = queryhandler !== undefined ? queryhandler : self.queryhandler; 
+        query = getquery.call(self, params, use_def_query);
 
         client.get('select', query, function(err, obj) {
 
