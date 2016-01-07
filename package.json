@@ -4,6 +4,7 @@
   "description": "Resizes images and overwrites exif on Corpus images.",
   "main": "app.js",
   "dependencies": {
+    "body-parser": "^1.14.2",
     "epeg": "~0.7.0",
     "exec": "^0.2.1",
     "express": "^3.21.2",

@@ -71,9 +71,9 @@ var config = {
     solrCore : '/solr/prod_SQL_full_export/select',
     
     // Solr dam
-    solrDAMHost : '172.20.1.159',
-    solrDAMPort : 8180,
-    solrDAMCore : '/solr-example/dev_DAM/',
+    solrDAMHost : 'csdev-seb-02',
+    solrDAMPort : 8983,
+    solrDAMCore : '/solr/dev_DAM_PIC/',
     
     // Solr tag
     /*

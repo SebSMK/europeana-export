@@ -70,7 +70,7 @@ router.get('/imgsrv/get/:id/:size', function(req, res, next) {
                           });
                 }else{
                   // get original image
-                  var originalFilePath = path.join(config.root, pathConv2Unix(solrResponse.response.docs[0].link));                  
+                  var originalFilePath = pathConv2Unix(solrResponse.response.docs[0].link);                  
                   var id = solrResponse.response.docs[0].id;
                   var imgtype = solrResponse.response.docs[0].type;
                   var invnumber = solrResponse.response.docs[0].invnumber;
@@ -147,7 +147,7 @@ router.post('/imgsrv/add', function(req, res) {
 
 function pathConv2Unix(windowsPath) {
     var unixPath = upath.toUnix(windowsPath);
-    return unixPath.replace('F:/FotoII/', '');
+    return unixPath.replace('/foto-03/FotoI/', config.mnt.fotoI);
 };
 
 module.exports = router;

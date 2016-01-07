@@ -84,7 +84,7 @@ Solr = (function() {
                 data += chunk;
             });
             resp.on('end', function() {
-                if (data !== ''){
+                if (data !== '' && data.indexOf('"error":') == -1){
                     var jsonData = JSON.parse(data);
                     logger.debug("Solr: response received", JSON.stringify(jsonData, null, 4));
                     deferred.resolve(jsonData);
@@ -131,13 +131,13 @@ Solr = (function() {
                 data += chunk;
             });
           resp.on('end', function() {
-              if (data !== ''){
+              if (data !== '' && data.indexOf('"error":') == -1){
                   var jsonData = JSON.parse(data);
                   logger.debug("Solr: response received", JSON.stringify(jsonData, null, 4));
                   deferred.resolve(jsonData);
               }else{
                   logger.error("Solr: empty postjson result returned");
-                  deferred.reject();
+                  deferred.reject(data);
               }
           });
           resp.on('error', function(err) {

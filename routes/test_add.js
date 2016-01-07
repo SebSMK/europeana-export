@@ -13,7 +13,11 @@ var express = require('express'),
     Image = require('../image'),
     upath = require('upath'),
     request = require('request'),
-    getFileStat = Q.denodeify(fs.stat);
+    getFileStat = Q.denodeify(fs.stat),
+    bodyParser = require('body-parser');
+
+// create application/json parser
+var jsonParser = bodyParser.json()    
 
 module.exports = function(router, io) {
     router.set('views', path.join(__dirname, '../views'));
@@ -207,7 +211,40 @@ module.exports = function(router, io) {
         }
     );
 
+    /***
+   *  ADD BY POST
+   *  @id: unique id for original image in Solr DAM
+   *  @invnumber: inventar number of the image
+   *  @link: link to original image
+   *  
+   **/
 
+   router.post('/imgsrv/test/add',  jsonParser, function(req, res) {
+        var params = req.body;
+        var pyrconv = new converter();
+        
+        try{
+          logger.info(sprintf("-- start processing - %s - %s %s", params.invnumber, params.id, params.link));
+          params['type'] = params.link.split('.').pop();                     
+  
+          processConversion(pyrconv, params)
+          .then(function(tosend) {                           
+                logger.info(sprintf('%s ----- processing done *******', params.id.toUpperCase()));
+                res.send(tosend);
+                res.end;
+          })                    
+          .catch(function(err) {
+              throw(err);
+          });    
+        
+        }
+        catch(err){
+          logger.error('add post - image processing stopped', err);                    
+          res.writeHead(500, 'Intern error');
+          res.write('add post - image processing stopped: ' + err);
+          res.end();
+        }                                       
+    });
 
     /***
      *  PRIVATE FUNCTIONS
@@ -302,6 +339,8 @@ module.exports = function(router, io) {
         var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);
         var reqparams = [{
             "id": params.id,
+            "invnumber": params.invnumber,
+            "type": params.type,
             "value": {
                 "set": res.pyrpath
             },
@@ -323,7 +362,7 @@ module.exports = function(router, io) {
                     invnumber: params.invnumber,
                     id: params.id
                 });
-                deferred.resolve(sprintf("send back to solrDAM: - %s - %s", params.invnumber, params.id));
+                deferred.resolve({'responseHeader':'ok', 'response':{'invnumber' : params.invnumber, 'id' : params.id }});
             })
             .catch(function(err) {
                 logger.error('send back to solrDAM:', err);
