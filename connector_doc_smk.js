@@ -8,7 +8,7 @@ var connector_doc_smk = {
         id: 'doc_smk',
         connector: connector_doc_smk,
         host: '172.20.1.61',
-        port: 8984,
+        port: 8983,
         path: '/solr/gettingstarted_shard1_replica1',       
         query:{
           def: {                                                

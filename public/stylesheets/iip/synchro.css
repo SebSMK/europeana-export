@@ -1,0 +1,68 @@
+
+html {
+    height: 100%;
+}
+body {
+    background: none repeat scroll 0 0 #181818;
+    color: #DDDDDD;
+    font-family: "Quattrocento","Verdana",sans-serif;
+    height: 100%;
+    margin: 0;
+}
+.main {
+    height: 88%;
+    margin-bottom: 5em;
+    position: fixed;
+    width: 100%;
+}
+footer {
+    border-top: 1px solid #AAAAAA;
+    bottom: 0;
+    font-size: 11pt;
+    height: 9%;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    margin: 0.5%;
+    padding-top: 0.5em;
+    position: fixed;
+    width: 99%;
+}
+footer a {
+    color: #B8B8B8;
+    font-weight: bold;
+}
+footer a:hover {
+    text-shadow: 1px 1px 4px #888888;
+}
+footer strong {
+    font-size: 12pt;
+    letter-spacing: 0.075em;
+    text-shadow: 1px 1px 1px #333333;
+}
+footer .metadata {
+    float: right;
+    margin-right: 1em;
+    text-align: right;
+    width: 45%;
+}
+footer .explanation {
+    float: left;
+    font-size: 12pt;
+    line-height: 1.15;
+    margin-left: 0.5em;
+    width: 45%;
+}
+#viewer1.iipmooviewer {
+    height: 100%;
+    left: 0.5%;
+    position: absolute;
+    top: 1%;
+    width: 49.25%;
+}
+#viewer2.iipmooviewer {
+    height: 100%;
+    left: 50.25%;
+    position: absolute;
+    top: 1%;
+    width: 49.25%;
+}

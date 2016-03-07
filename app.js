@@ -19,7 +19,8 @@ var io = require('socket.io')(http);
 
 var route_imgsrv_add = require('./routes/imgsrv_add')(app, io);
 var route_imgsrv_add_test = require('./routes/test_add')(app, io);
-var route_imgsrv_get_test = require('./routes/test_zoom')(app, io);
+var route_imgsrv_zoom_test = require('./routes/test_zoom')(app, io);
+var route_imgsrv_zoom_compare = require('./routes/test_compare')(app, io);
 var route_tag_get = require('./routes/tag_get')(app, io);
 var route_doc_get = require('./routes/doc_get')(app, io);
 var route_proxy = require('./routes/proxy')(app, io);
