@@ -11,7 +11,14 @@ Q = require('q'),
 fs = require('fs'),    
 Image = require('../image'),
 upath = require('upath'),
-request = require('request');
+request = require('request'),
+bodyParser = require('body-parser');
+
+// create application/json parser
+var jsonParser = bodyParser.json();
+
+// parse application/x-www-form-urlencoded
+var urlencodedParser = bodyParser.urlencoded({ extended: false });  
 
 var url = require('url');
 var proxy = require('proxy-middleware'); 
@@ -21,43 +28,32 @@ module.exports = function(router, io) {
   router.set('view engine', 'jade');
   //router.set(express.static(path.join(__dirname, 'public')));
 
-//* proxying calls to IIP server
-router.use(config.IIPPath, proxy(url.parse(sprintf('http://%s%s', config.IIPHost,config.IIPPath))));
-
-//* proxying calls to IIP images
-router.use('/imgsrv/test/zoom/images/', proxy(url.parse(sprintf('http://localhost:%s/images/', config.port))));
-
-
-router.get('/imgsrv/test/zoom/:id',           
-      /*
-      function(req, res, next) {    
-      //* loading socket IO 
-          io.sockets.emit('message', { message: 'starting get console ' + config.version}); 
-          io.sockets.emit('message', { message: 'iipserver: ' + JSON.stringify(sprintf('http://%s%s', config.IIPHost,config.IIPPath))});                                            
-          next();                               
-      },
-      
-      function(req, res, next) {
-      //* checking if IIP server is available          
-          sendInterfaceMessage('message', { message: 'starting request '});
-          request('http://172.20.1.203/iipsrv/iipsrv.fcgi', function (error, response, body) {
-              if (!error && response.statusCode == 200) {
-                  sendInterfaceMessage('message' + body); // Show the HTML for the Modulus homepage.
-              }else{
-                  sendInterfaceMessage('iip start FAILED: ' + error);
-              }
-              
-              sendInterfaceMessage('iip start end: ' + error);
-              
-              next(); 
-          });                                                     
-      }, */          
-      // ...real stuff starts here
+  //* proxying calls to IIP server
+  router.use(config.IIPPath, proxy(url.parse(sprintf('http://%s%s', config.IIPHost,config.IIPPath))));
+  
+  //* proxying calls to IIP images
+  router.use('/imgsrv/test/zoom/images/', proxy(url.parse(sprintf('http://localhost:%s/images/', config.port))));
+  
+  
+  router.get('/imgsrv/test/zoom/:id',                       
       function(req, res, next) {        
-        sendInterfaceMessage('//////// start zooming *******');                        
-        //res.sendfile('views/zoom.html');
+        sendInterfaceMessage('//////// start zooming *******');                                
         
         getImageData(req.params.id)
+        .then(function(params){
+          res.render('zoom', {title: params.invnumber, invnumber: params.invnumber, path: params.path, IIPServerPath: config.IIPPath});
+        })
+        .catch(function (err){
+          res.send(500);
+        })
+         
+  });  
+        
+  router.post('/imgsrv/test/zoom', urlencodedParser,                    
+      function(req, res, next) {               
+        sendInterfaceMessage('//////// start zooming *******');                                
+        
+        getImageData(req.body.id)
         .then(function(params){
           res.render('zoom', {title: params.invnumber, invnumber: params.invnumber, path: params.path, IIPServerPath: config.IIPPath});
         })

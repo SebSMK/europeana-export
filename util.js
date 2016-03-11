@@ -25,6 +25,15 @@
   };  
   Object.defineProperty(Error.prototype, 'toJSON', config);  
   
+  common.guid = function() {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+  };
+  
 	common.getValueFromSplit = function(splited, index){		
 		return splited.length > index && common.isValidDataText(splited[index]) ? splited[index] : null;		
 	};

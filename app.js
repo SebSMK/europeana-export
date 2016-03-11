@@ -56,6 +56,7 @@ app.use('/', route_searching);
 app.use('/', route_imgsrv);
 app.use('/', route_test);
 
+
 /**
  * convert image request
  * */
@@ -118,6 +119,7 @@ app.post('/convert_pyr', (function(_this) {
 /***
  *  DEV - NOT IN PROD
  **/
+ 
 app.post('/mongoadd', function(req, res){
     // Connect to mongo (url to mongo is in config.js)    
     var mongodb = new MongoDB();    

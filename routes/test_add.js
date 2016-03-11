@@ -17,7 +17,7 @@ var express = require('express'),
     bodyParser = require('body-parser');
 
 // create application/json parser
-var jsonParser = bodyParser.json()    
+var jsonParser = bodyParser.json();    
 
 module.exports = function(router, io) {
     router.set('views', path.join(__dirname, '../views'));
@@ -213,9 +213,12 @@ module.exports = function(router, io) {
 
     /***
    *  ADD BY POST
-   *  @id: unique id for original image in Solr DAM
+   *  mandatory:
    *  @invnumber: inventar number of the image
    *  @link: link to original image
+   *  
+   *  optional:
+   *  @id: unique id for original image in Solr DAM
    *  
    **/
 
@@ -224,6 +227,7 @@ module.exports = function(router, io) {
         var pyrconv = new converter();
         
         try{
+          params.id = params.id || util.guid(); 
           logger.info(sprintf("-- start processing - %s - %s %s", params.invnumber, params.id, params.link));
           params['type'] = params.link.split('.').pop();                     
   

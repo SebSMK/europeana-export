@@ -16,6 +16,24 @@ request = require('request');
 router.set('views', path.join(__dirname, '../views'));
 router.set('view engine', 'jade');
 
+router.get('/test/merde', function(req, res){
+  // The form's action is '/' and its method is 'POST',
+  // so the `app.post('/', ...` route will receive the
+  // result of our form
+  var html = '<form action="/imgsrv/test/zoom" method="post" enctype="application/x-www-form-urlencoded">' +
+               'Enter your name:' +
+               '<input type="text" name="userName" placeholder="..." />' +
+               '<br>' +
+               '<button type="submit">Submit</button>' +
+            '</form>';
+               
+    res.send(html);
+  });
+  
+router.post('/test/merde', function(req, res){
+  console.log(req.body); 
+}); 
+
 router.get('/test/imgsrv/add/:id', function(req, res, next) {                
     var promise = [];                     
     var solrPath = sprintf('%sselect?q=id%%3A%s+OR+invnumber%%3A%s&wt=json&fl=link,id,invnumber', config.solrDAMCore, req.params.id, req.params.id);    
