@@ -13,7 +13,17 @@ html
         height: 100%;
         padding: 0;
         margin: 0;
-      }      
+      }  
+      div#viewer0{
+        height: 100%;
+        min-height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        margin: 0;
+        padding: 0;
+      }    
      
     script(src="/javascripts/iip/mootools-core-1.5.1-full-nocompat-yc.js")
     script(src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js")
@@ -24,12 +34,15 @@ html
   
   body       
     div#main
+      div#viewer0
       div#viewer1
       div#viewer2
+      div#viewer3
+      div#viewer4
+      
     script.
-      var images = !{path};
-      var image1 = images[0]; 
-      var image2 = images[1];
+      var images_2zoom = !{images_2zoom};
+      var image = "#{path}";      
       var server = "#{IIPServerPath}"; 
       
     script(src="/javascripts/iip/compare.js")

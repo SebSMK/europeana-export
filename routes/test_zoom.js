@@ -51,8 +51,51 @@ module.exports = function(router, io) {
         
   router.post('/imgsrv/test/zoom', urlencodedParser,                    
       function(req, res, next) {               
-        sendInterfaceMessage('//////// start zooming *******');                                
+        sendInterfaceMessage('//////// start post zooming *******');                                
         
+        var images_received = JSON.parse(req.body.images);
+        var promise = [];
+        var deferred = Q.defer();                
+        
+        for (i = 0; i < images_received.length; i++) {            
+            promise.push(getImageData(images_received[i].id));
+        };
+        
+        Q.allSettled(promise).then(function(result) {
+            //loop through array of promises, add items  
+            var tosend = [] 
+            var images_2zoom = [];            
+            result.forEach(function(res) {
+                if (res.state === "fulfilled") {
+                    var tmpjs = {};
+                    tmpjs["path"] = res.value.path;
+                    images_2zoom.push(tmpjs);
+                    images_2zoom.push(tmpjs);
+                    //images_2zoom.push(res.value.path);                    
+                }
+                else if (res.state === "rejected") {                    
+                    logger.error('LOCAL ERR:zoom:post', res.reason);
+                    sendInterfaceMessage('LOCAL ERR:zoom:post: ' + res.reason);                       
+                }
+            });
+            promise = []; //empty array, since it's global.
+            
+            //res.render('zoom', {title: params.invnumber, invnumber: params.invnumber, path: params.path, IIPServerPath: config.IIPPath});
+            //res.render('compare', {images:JSON.stringify(images_2zoom), IIPServerPath: config.IIPPath});  
+            
+            //res.render('compare', {images_2zoom:JSON.stringify(images_2zoom), IIPServerPath: config.IIPPath});
+            res.render('compare', {images_2zoom:JSON.stringify(images_2zoom), path:images_2zoom[0].path, IIPServerPath: config.IIPPath});
+            //res.render('zoom', {path:images_2zoom[0].path, IIPServerPath: config.IIPPath});            
+            
+                        
+        })
+        .catch(function (err){
+          logger.error('GENERAL ERR: zoom:post', err);
+          sendInterfaceMessage('GENERAL ERR:zoom:post: ' + err);
+          res.send(500);
+        });
+        
+        /*
         getImageData(req.body.id)
         .then(function(params){
           res.render('zoom', {title: params.invnumber, invnumber: params.invnumber, path: params.path, IIPServerPath: config.IIPPath});
@@ -60,9 +103,34 @@ module.exports = function(router, io) {
         .catch(function (err){
           res.send(500);
         })
+        */
          
   });
 
+  /*
+  router.get('/imgsrv/test/compare/*',                 
+      function(req, res, next) {        
+        sendInterfaceMessage('//////// start compare *******');                                
+        
+        var image1 = req.param('image1'), image2 = req.param('image2');                         
+        
+        if(util.isValidDataText(image1) && util.isValidDataText(image2)) {
+          var path = [];
+          getImageData(image1)
+          .then(function(params){
+            path.push(params.path);
+            return getImageData(image2);            
+          })
+          .then(function(params){
+            path.push(params.path);            
+            res.render('compare', {title: params.invnumber, invnumber: params.invnumber, path:JSON.stringify(path), IIPServerPath: config.IIPPath});
+          })
+          .catch(function (err){
+            res.send(500);
+          })
+        }                
+         
+  });
 
   /***
  *  PRIVATE FUNCTIONS
@@ -102,7 +170,7 @@ module.exports = function(router, io) {
 		.catch(function (err){              
       logger.error('zoom:getImageData', err);
   		sendInterfaceMessage("zoom:getImageData - error: " +  err); 
-  		deferred.rejected(err);
+  		deferred.reject(err);
   		return deferred.promise;         
     }); 
 
