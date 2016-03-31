@@ -1,5 +1,5 @@
 
-    // @array of json data on images to zoom: images_2zoom[{path}]    
+      
     var viewers = [], view_0, view_1, view_2, view_3, view_4;            
     
     /*
@@ -14,6 +14,7 @@
       });  
     */
     
+    // @array of json data on images to zoom: images_2zoom[{path}]  
     if(images_2zoom.length == 1){
        view_0 = new IIPMooViewer( "viewer0", {    
         image: images_2zoom[0].path,

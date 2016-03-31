@@ -69,9 +69,7 @@ module.exports = function(router, io) {
                 if (res.state === "fulfilled") {
                     var tmpjs = {};
                     tmpjs["path"] = res.value.path;
-                    images_2zoom.push(tmpjs);
-                    images_2zoom.push(tmpjs);
-                    //images_2zoom.push(res.value.path);                    
+                    images_2zoom.push(tmpjs);                                                            
                 }
                 else if (res.state === "rejected") {                    
                     logger.error('LOCAL ERR:zoom:post', res.reason);
@@ -84,7 +82,7 @@ module.exports = function(router, io) {
             //res.render('compare', {images:JSON.stringify(images_2zoom), IIPServerPath: config.IIPPath});  
             
             //res.render('compare', {images_2zoom:JSON.stringify(images_2zoom), IIPServerPath: config.IIPPath});
-            res.render('compare', {images_2zoom:JSON.stringify(images_2zoom), path:images_2zoom[0].path, IIPServerPath: config.IIPPath});
+            res.render('compare', {images_2zoom:JSON.stringify(images_2zoom), IIPServerPath: config.IIPPath});
             //res.render('zoom', {path:images_2zoom[0].path, IIPServerPath: config.IIPPath});            
             
                         
