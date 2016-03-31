@@ -243,7 +243,7 @@ Image = (function() {
         var deferred = Q.defer();
         var source = path + '.tmp';
         var target = path;
-        var cmd = sprintf("convert '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target)
+        var cmd = sprintf("convert -monitor '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target)
 
         logger.info(cmd);
 
@@ -259,6 +259,14 @@ Image = (function() {
                 deferred.resolve('0');
             });
 
+        child.stderr.on('data', function(data) {
+            //console.log(data);
+            var title = data.split('/').shift();
+            var pctindex = data.split('/').pop().indexOf('%');
+            var pct = data.split('/').pop().substring( pctindex-3, pctindex);
+            
+            console.log(JSON.stringify({title:title, pct:pct.trim()})); 
+        });
         return deferred.promise;
     }
 
