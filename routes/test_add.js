@@ -236,6 +236,13 @@ module.exports = function(router, io) {
                 logger.info(sprintf('%s ----- processing done *******', params.id.toUpperCase()));
                 res.send(tosend);
                 res.end;
+          }, function (error) {                
+              throw(error);
+          }, function (prog) {                
+              //console.log("Conversion progress: " + progress); 
+              var progress = JSON.parse(prog);
+              //sendInterfaceMessage(sprintf('----- processing: %s - %s %% ', progress.title, progress.pct));
+              io.sockets.emit('converting', JSON.parse(prog));             
           })                    
           .catch(function(err) {
               throw(err);
@@ -322,21 +329,38 @@ module.exports = function(router, io) {
     };
 
     function processConversion(pyrconv, params) {
-        return getFileStat(params.link)
-            .then(function(stat) {
-                // get and check file size
-                return checkFileSize(stat, params);
-            })
-            .then(function(stat) {
+        var deferred = Q.defer();
+        
+        getFileStat(params.link)
+        .then(function(stat) {
+            // get and check file size
+            return checkFileSize(stat, params);
+        })
+        .then(function(stat) {
 
-                sendInterfaceMessage('---- processConversion: ' + params.id);
-                // start conversion
-                return pyrconv.exec(params)
-                    .then(function(res) {
-                        // save conversion-data back to solr-dam
-                        return sendDataBackToSolrDAM(params, res, stat);
-                    })
+            sendInterfaceMessage('---- processConversion: ' + params.id);
+            // start conversion
+            pyrconv.exec(params)
+            .then(function(res) {                        
+                return sendDataBackToSolrDAM(params, res, stat);
+            }, function (error) {                
+                throw(error);
+            }, function (progress) {                
+                //console.log("processConversion progress: " + progress);
+                deferred.notify(progress);
             })
+            .then(function(tosend) {
+              deferred.resolve(tosend);                    
+            })                
+        })
+        
+        .catch(function(err) {
+            /*catch and break on all errors or exceptions on all the above methods*/
+            logger.error('processConversion', err);
+            deferred.reject(err);
+        })
+        
+        return deferred.promise;
     }
 
     function sendDataBackToSolrDAM(params, res, stat) {

@@ -51,12 +51,28 @@ Converter = (function() {
                   image = new Image(filePath, invnumber, solrid);
                   imageProcessor = config.dummy ? image.dummyprocess.bind(image) : image.process.bind(image);
                   
+                  /*
                   return imageProcessor(function(data, type) {                                                                    
                     deferred.resolve({id: solrid, pyrpath: data});                                                                             
                     },
                     function(error) {
                         deferred.reject(error);
                     });
+                  */
+                  
+                  imageProcessor()
+                  .then(function(data) {                      
+                    deferred.resolve({id: solrid, pyrpath: data.pyrpath});
+                  }, function (error) {                
+                      throw(error);
+                  }, function (progress) {                
+                      //console.log("Converter progress: " + progress);
+                      deferred.notify(progress);
+                  })
+                  .catch(function(err) {
+                      throw(error); 
+                  })
+                  
               }
               catch(ex){
                   logger.error(ex);

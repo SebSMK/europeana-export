@@ -76,30 +76,26 @@ Image = (function() {
         });*/
     };
 
-    Image.prototype.dummyprocess = function(done, error) {
+    Image.prototype.dummyprocess = function() {
+        var deferred = Q.defer();
+        
         setTimeout(function() {
-            return done('dummypath', 'image/tif');
-        }, 500);
-    }
-
-    Image.prototype.dummyprocessPipe = function(done, error) {
-
-        var self = this;
-        logger.info('Image.prototype.process: ' + JSON.stringify(this, null, 4));
-        self.pyr_path = config.tempFilePath + self.invnumber + '_' + self.solrid + '_pyr.tif';
-        promisePipe(
-            fs.createReadStream(self.path),            
-            fs.createWriteStream(self.pyr_path)
-        ).then(function(streams){
-            logger.info("Yay, all streams are now closed/ended/finished!");
-        }, function(err) {
-            logger.error("This stream failed:", err.source);
-            logger.error("Original error was:", err.originalError);
-        });        
+            deferred.notify(JSON.stringify({title:'Load', pct:'99'}));                    
+        }, 100);
+        
+        setTimeout(function() {
+            deferred.notify(JSON.stringify({title:'Save', pct:'99'}));                    
+        }, 100);        
+                
+        setTimeout(function() {            
+            deferred.resolve({type: 'image/tif', pyrpath: 'dummypath'})
+        }, 500);        
+        
+        return deferred.promise;
     }
     
-    Image.prototype.process = function(done, error) {
-
+    Image.prototype.process = function() {
+        var deferred = Q.defer();
         var self = this;
         //self.image = config.tempFilePath + guid() + '.image';
         self.image = config.tempFilePath + self.solrid + '.image';
@@ -122,45 +118,7 @@ Image = (function() {
                 self.type = type;
                 //return writeFile(self.image, self.imageData);
                 return Q.defer().resolve();
-            })
-            /*
-            .then(function() {
-                logger.info('created temp copy', self.image, "(" + self.path + ")");
-                return openMetadata(self.image);
-            })
-            .then(function(tags) {
-                logger.info('opened metadata', self.path);
-                return lookupArtwork(tags, self.type);
-            })
-            .then(function(newTags) {
-                logger.info('finished new tags');
-                logger.debug('newTags:', JSON.stringify(newTags, null, 4));
-                self.imageTags = newTags;
-                self.imageData = self.convert();
-                return writeFile(self.image, self.imageData);
-            })
-            .then(function() {
-                logger.info('file conversion completed', self.image, "(" + self.path + ")");
-                if (self.imageTags) {
-                    return addMetadata(self.image, self.imageTags);
-                }
-                return Q.defer().resolve(); //just hit next then
-            })
-
-            
-            //create pyr file
-            .then(function() {
-                if (self.imageTags) {
-                    logger.info('added new metadata', self.image, "(" + self.path + ")");
-                }
-                return readFile(self.image);
-            })
-            
-            
-            .then(function() {
-                self.pyr_path = config.tempFilePath + self.invnumber + '_' + self.solrid + '_pyr.tif';
-                return writeFile(self.pyr_path + '.tmp', self.imageData);
-            }) */
+            })           
             .then(function() {
                 logger.info('create tmp pyr tiff');
                 return convertPyr(self.pyr_path);
@@ -171,6 +129,11 @@ Image = (function() {
                     logger.info('deleted temp pyr copy', self.pyr_path + '.tmp',
                         "(" + self.path + ")")
                 });
+            }, function (error) {                
+                throw(error);
+            }, function (progress) {                
+                //console.log("Request progress: " + progress);
+                deferred.notify(progress);
             })
             /*return pyr file path*/
             .then(function() {
@@ -179,32 +142,17 @@ Image = (function() {
                     logger.info('deleted temp copy', self.image,
                         "(" + self.path + ")")
                 });
-                return done(self.pyr_path, 'image/tif');
+                //return done(self.pyr_path, 'image/tif');
+                deferred.resolve({type: 'image/tif', pyrpath: self.pyr_path})
 
             })
-
-
-            /*return pyr file*/
-            /*
-            .then(function() { 
-                logger.info('delete tmp pyr tiff');            
-                return readFile(self.pyr_path); 
-                })        
-            .then(function(data) { 
-                logger.info('read updated data from file', self.pyr_path, "(" + self.path + ")");
-                self.imageData = data;
-                deleteFile(self.image).then(function(){logger.info('deleted temp copy', self.image, 
-                                                       "(" + self.path + ")")}); 
-                //return done(self.imageData, self.type);
-                return done(self.imageData, 'image/tif');
-                
-                })
-                */
             .catch(function(err) {
                 /*catch and break on all errors or exceptions on all the above methods*/
                 logger.error('Image.prototype.process', err);
-                return error(err);
+                deferred.reject(err);
             })
+            
+            return deferred.promise;
     }     
 
     Image.prototype.download = function(done, error) {
@@ -265,7 +213,9 @@ Image = (function() {
             var pctindex = data.split('/').pop().indexOf('%');
             var pct = data.split('/').pop().substring( pctindex-3, pctindex);
             
-            console.log(JSON.stringify({title:title, pct:pct.trim()})); 
+            //console.log(JSON.stringify({title:title, pct:pct.trim()})); 
+            
+            deferred.notify(JSON.stringify({title:title, pct:pct.trim()}));
         });
         return deferred.promise;
     }
