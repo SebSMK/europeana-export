@@ -209,13 +209,13 @@ Image = (function() {
 
         child.stderr.on('data', function(data) {
             //console.log(data);
-            var title = data.split('/').shift();
+            var process = data.split('/').shift();
             var pctindex = data.split('/').pop().indexOf('%');
             var pct = data.split('/').pop().substring( pctindex-3, pctindex);
             
             //console.log(JSON.stringify({title:title, pct:pct.trim()})); 
             
-            deferred.notify(JSON.stringify({title:title, pct:pct.trim()}));
+            deferred.notify(JSON.stringify({process:process, pct:pct.trim()}));
         });
         return deferred.promise;
     }

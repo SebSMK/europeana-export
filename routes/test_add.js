@@ -232,7 +232,9 @@ module.exports = function(router, io) {
           params['type'] = params.link.split('.').pop();                     
   
           processConversion(pyrconv, params)
-          .then(function(tosend) {                           
+          .then(function(tosend) {
+                sendInterfaceMessage('----- end processing');
+                io.sockets.emit('converting', {process: 'end', pct:'100'});                            
                 logger.info(sprintf('%s ----- processing done *******', params.id.toUpperCase()));
                 res.send(tosend);
                 res.end;
@@ -241,7 +243,7 @@ module.exports = function(router, io) {
           }, function (prog) {                
               //console.log("Conversion progress: " + progress); 
               var progress = JSON.parse(prog);
-              //sendInterfaceMessage(sprintf('----- processing: %s - %s %% ', progress.title, progress.pct));
+              sendInterfaceMessage(sprintf('----- processing: %s - %s %% ', progress.process, progress.pct));
               io.sockets.emit('converting', JSON.parse(prog));             
           })                    
           .catch(function(err) {
