@@ -14,7 +14,7 @@ var imagemagick = require('imagemagick-native'),
     deleteFile = Q.denodeify(fs.unlink),
     writeFile = Q.denodeify(fs.writeFile),
     readFile = Q.denodeify(fs.readFile),
-    promisePipe = require("promisepipe");    
+    promisePipe = require("promisepipe");         
 
 Image = (function() {
 
@@ -142,9 +142,8 @@ Image = (function() {
                     logger.info('deleted temp copy', self.image,
                         "(" + self.path + ")")
                 });
-                //return done(self.pyr_path, 'image/tif');
+                //return done(self.pyr_path, 'image/tif');                
                 deferred.resolve({type: 'image/tif', pyrpath: self.pyr_path})
-
             })
             .catch(function(err) {
                 /*catch and break on all errors or exceptions on all the above methods*/
@@ -191,10 +190,13 @@ Image = (function() {
         var deferred = Q.defer();
         var source = path + '.tmp';
         var target = path;
-        var cmd = sprintf("convert -monitor '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target)
+        var cmd = sprintf("convert -monitor '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target);
+        cmd = sprintf("convert '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target);
+        
+        cmd = sprintf("gm convert -monitor '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target);
 
-        logger.info(cmd);
-
+        logger.info(cmd);        
+               
         var child = exec(cmd,
             function(error, stdout, stderr) {
                 if (error !== null && error !== '') {
@@ -204,19 +206,24 @@ Image = (function() {
                     logger.info('convertPyr Ok');
                     //deferred.resolve('0');  
                 }
+                deferred.notify(JSON.stringify({process:'end', pct:100}));
                 deferred.resolve('0');
-            });
-
+            });               
+         
         child.stderr.on('data', function(data) {
             //console.log(data);
-            var process = data.split('/').shift();
-            var pctindex = data.split('/').pop().indexOf('%');
-            var pct = data.split('/').pop().substring( pctindex-3, pctindex);
+            var lastline = data.split('\r');
+            lastline.pop();            
+            var lastdata = lastline.pop().trim().split(" ");
+            var pctindex = lastdata.shift();
+            var pct = pctindex.split('%').shift();
+            lastdata.shift();
+            var process = lastdata.shift();                                      
             
-            //console.log(JSON.stringify({title:title, pct:pct.trim()})); 
-            
+            console.log(JSON.stringify({process:process, pct:pct.trim()}));             
             deferred.notify(JSON.stringify({process:process, pct:pct.trim()}));
-        });
+        });                
+               
         return deferred.promise;
     }
 

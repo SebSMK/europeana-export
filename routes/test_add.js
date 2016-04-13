@@ -232,10 +232,8 @@ module.exports = function(router, io) {
           params['type'] = params.link.split('.').pop();                     
   
           processConversion(pyrconv, params)
-          .then(function(tosend) {
-                sendInterfaceMessage('----- end processing');
-                io.sockets.emit('converting', {process: 'end', pct:'100'});                            
-                logger.info(sprintf('%s ----- processing done *******', params.id.toUpperCase()));
+          .then(function(tosend) {                                                           
+                sendInterfaceMessage(sprintf('%s ----- processing done *******', params.id.toUpperCase()));
                 res.send(tosend);
                 res.end;
           }, function (error) {                
