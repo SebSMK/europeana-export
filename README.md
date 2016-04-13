@@ -14,8 +14,9 @@ install the following
 	$ apt-get install libjpeg-dev  
 	$ apt-get install exiv2
 	$ apt-get install libexiv2-dev
+	$ apt-get install graphicsmagick-imagemagick-compat
   
-  add to the path and reload bash:
+  add to the path and reload bash (also graphicsmagick....):
   
   $ echo "export PATH=/usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16:$PATH" >> ~/.bashrc
   $ source ~/.bashrc
