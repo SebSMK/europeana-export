@@ -17,6 +17,19 @@ window.onload = function() {
             console.log("There is a problem:", data);
         }
     });
+    
+    socket.on('progress', function (data) {
+        if(data.message) {                     
+            var html = '';
+            for(var i=0; i<messages.length; i++) {
+                html += messages[i] + '<br />';
+            }
+            html += data.message;
+            content.innerHTML = html;
+        } else {
+            console.log("There is a problem:", data);
+        }
+    });
  
     sendButton.onclick = function() {
         var text = field.value;

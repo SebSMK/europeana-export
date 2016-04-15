@@ -187,7 +187,7 @@ module.exports = function(router, io) {
             });
             next();
         },
-        // ...real stuff starting here
+        // ...real stuff starts here
         function(req, res, next) {
 
             sendInterfaceMessage(sprintf('******* %s ----- start processing', req.params.id.toUpperCase()));
@@ -303,12 +303,13 @@ module.exports = function(router, io) {
                     deferred.reject("addByID - image not found: " + id);                    
                 }
 
-                Q.allSettled(promise).then(function(result) {
+                Q.allSettled(promise)
+                .then(function(result) {
                     //loop through array of promises, add items  
                     var tosend = []
                     result.forEach(function(res) {
-                        if (res.state === "fulfilled") {
-                            tosend.push("-- SUCCESS: " + res.value);
+                        if (res.state === "fulfilled") {                            
+                            tosend.push(sprintf("-- SUCCESS: %s - %s", res.value.response.invnumber, res.value.response.id));
                         }
                         if (res.state === "rejected") {
                             tosend.push("-- ERROR: " + res.reason);
@@ -316,6 +317,12 @@ module.exports = function(router, io) {
                     });
                     promise = []; //empty array, since it's global.
                     deferred.resolve(tosend);
+                }, function (error) {                
+                    throw(error);
+                }, function (prog) {                
+                    //console.log("Conversion progress: " + progress); 
+                    var progress = JSON.parse(prog.value);
+                    sendInterfaceMessage(sprintf('----- processing: %s - %s %% - %s ', progress.process, progress.pct, progress.solrid), 'progress');                                
                 });
             })
             .catch(function(err) {
@@ -423,9 +430,10 @@ module.exports = function(router, io) {
         var unixPath = upath.toUnix(windowsPath);
         return unixPath.replace('/foto-03/FotoI/', config.mnt.fotoI);
     };
-
-    function sendInterfaceMessage(message) {
-        io.sockets.emit('message', {
+   
+    function sendInterfaceMessage(message, type) {
+        var category = type === undefined ? 'message' : type;         
+        io.sockets.emit(category, {
             message: sprintf('%s -- %s', getFormatedNowDate(), message)
         });
     };

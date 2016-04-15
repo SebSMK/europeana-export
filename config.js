@@ -5,7 +5,7 @@ connector_CollectionSpace = require('./connector_CollectionSpace');
 
 var config = {
 
-    version :  '000.001.040',
+    version :  '000.001.045',
             
     // dam
     dam:{  	   
@@ -31,13 +31,13 @@ var config = {
     
     // Import parameters        
     dummy: false,
-    last_processed: 'kms3696 8bit',
+    //last_processed: 'kms3696 8bit',
     maxFileSize:  3000000000, // ---> control on size does'nt work??!! -> try with kms3696 8bit  
     solrParamsImportAll: {
                 //'q': 'invnumber%3Akms*+AND+(type%3A".tif"+OR+type%3A".jpg")',
-                //'q': 'invnumber:kms* AND (type:".tif" OR type:".jpg")',
+                'q': 'invnumber:kms* AND (type:".tif" OR type:".jpg" OR type:".tiff" OR type:".jpeg")',
                 //'fq': 'invnumber:kms*',                
-                'q': '*:*',
+                //'q': '*:*',
                 'facet.limit': -1,
                                 
                 'rows': 0,                
@@ -100,10 +100,17 @@ var config = {
     root : '/mnt/fotoII/',
     port : 4000,
     
+    storage: {
+      dev: '/mnt/damapistorage/dev/',
+      test: '/mnt/damapistorage/test/',
+      prod: '/mnt/damapistorage/prod/'              
+    },
+    
     // Mounts
     mnt: {fotoI: '/mnt/fotoI/',
           fotoII: '/mnt/fotoII/',
-	groups: '/mnt/cifs/groups/'}
+        	groups: '/mnt/cifs/groups/'
+    }
         
     // MongoDB
     //mongoURL: 'mongodb://localhost:27017/DAM_PYR',

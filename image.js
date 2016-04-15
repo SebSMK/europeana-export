@@ -21,6 +21,8 @@ Image = (function() {
     var solr = new Solr(config.solrHost, config.solrPort);
     var magic = new Magic(mmm.MAGIC_MIME_TYPE);
     var type, path, solrid;
+    
+    var storage = config.storage.dev;
 
     /**
      * Constructor
@@ -77,20 +79,22 @@ Image = (function() {
     };
 
     Image.prototype.dummyprocess = function() {
+        var self = this;
         var deferred = Q.defer();
         
-        setTimeout(function() {
-            deferred.notify(JSON.stringify({title:'Load', pct:'99'}));                    
-        }, 100);
-        
-        setTimeout(function() {
-            deferred.notify(JSON.stringify({title:'Save', pct:'99'}));                    
-        }, 100);        
-                
         setTimeout(function() {            
-            deferred.resolve({type: 'image/tif', pyrpath: 'dummypath'})
-        }, 500);        
-        
+            logger.info(JSON.stringify({process:'Dummy Load', pct:'99', solrid:self.solrid})); 
+            deferred.notify(JSON.stringify({process:'Dummy Load', pct:'99', solrid:self.solrid})); 
+             setTimeout(function() {
+                  logger.info(JSON.stringify({process:'Dummy Save', pct:'99', solrid:self.solrid})); 
+                  deferred.notify(JSON.stringify({process:'Dummy Save', pct:'99', solrid:self.solrid})); 
+                  setTimeout(function() { 
+                      logger.info(JSON.stringify({process:'end', pct:'100', solrid:self.solrid}));
+                      deferred.notify(JSON.stringify({process:'end', pct:'100', solrid:self.solrid}));           
+                      deferred.resolve({type: 'image/tif', pyrpath: 'dummypath'})
+                  }, 500);                         
+              }, 100);                       
+        }, 100);
         return deferred.promise;
     }
     
@@ -98,8 +102,11 @@ Image = (function() {
         var deferred = Q.defer();
         var self = this;
         //self.image = config.tempFilePath + guid() + '.image';
-        self.image = config.tempFilePath + self.solrid + '.image';
-        self.pyr_path = config.tempFilePath + self.invnumber + '_' + self.solrid + '_pyr.tif';
+        //self.image = config.tempFilePath + self.solrid + '.image';
+        //self.pyr_path = config.tempFilePath + self.invnumber + '_' + self.solrid + '_pyr.tif';
+        
+        self.image = storage + self.solrid + '.image';
+        self.pyr_path = storage + self.invnumber + '_' + self.solrid + '_pyr.tif';
 
         logger.info('Image.prototype.process: ' + JSON.stringify(this, null, 4));
         
@@ -121,7 +128,7 @@ Image = (function() {
             })           
             .then(function() {
                 logger.info('create tmp pyr tiff');
-                return convertPyr(self.pyr_path);
+                return convertPyr.call(self, self.pyr_path);
             })
             .then(function(type) {
                 logger.info('create pyr tiff');
@@ -190,10 +197,9 @@ Image = (function() {
         var deferred = Q.defer();
         var source = path + '.tmp';
         var target = path;
-        var cmd = sprintf("convert -monitor '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target);
-        cmd = sprintf("convert '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target);
-        
-        cmd = sprintf("gm convert -monitor '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target);
+        var cmd = sprintf("gm convert -monitor '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target);
+        //var cmd = sprintf("convert -monitor '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target);
+        //cmd = sprintf("convert '%s' -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:%s'", source, target);                
 
         logger.info(cmd);        
                
@@ -206,7 +212,8 @@ Image = (function() {
                     logger.info('convertPyr Ok');
                     //deferred.resolve('0');  
                 }
-                deferred.notify(JSON.stringify({process:'end', pct:100}));
+                logger.info(JSON.stringify({process:'end', pct:100, solrid:self.solrid}));
+                deferred.notify(JSON.stringify({process:'end', pct:100, solrid:self.solrid}));
                 deferred.resolve('0');
             });               
          
@@ -220,8 +227,8 @@ Image = (function() {
             lastdata.shift();
             var process = lastdata.shift();                                      
             
-            console.log(JSON.stringify({process:process, pct:pct.trim()}));             
-            deferred.notify(JSON.stringify({process:process, pct:pct.trim()}));
+            logger.info(JSON.stringify({process:process, pct:pct.trim(), solrid:self.solrid}));             
+            deferred.notify(JSON.stringify({process:process, pct:pct.trim(), solrid:self.solrid}));
         });                
                
         return deferred.promise;
