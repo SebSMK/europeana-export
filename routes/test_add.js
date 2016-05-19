@@ -174,7 +174,7 @@ module.exports = function(router, io) {
                     return deferred.promise;
                 })                
               
-              res.end();
+              //res.end();
         });
 
     /*******************************

@@ -14,7 +14,8 @@ var imagemagick = require('imagemagick-native'),
     deleteFile = Q.denodeify(fs.unlink),
     writeFile = Q.denodeify(fs.writeFile),
     readFile = Q.denodeify(fs.readFile),
-    promisePipe = require("promisepipe");         
+    promisePipe = require("promisepipe"),
+    util = require('./util');         
 
 Image = (function() {
 
@@ -221,14 +222,18 @@ Image = (function() {
             //console.log(data);
             var lastline = data.split('\r');
             lastline.pop();            
-            var lastdata = lastline.pop().trim().split(" ");
-            var pctindex = lastdata.shift();
-            var pct = pctindex.split('%').shift();
-            lastdata.shift();
-            var process = lastdata.shift();                                      
+            var lastdata = lastline.pop();
             
-            logger.info(JSON.stringify({process:process, pct:pct.trim(), solrid:self.solrid}));             
-            deferred.notify(JSON.stringify({process:process, pct:pct.trim(), solrid:self.solrid}));
+            if(util.isValidDataText(lastdata)){              
+              var dataout = lastdata.trim().split(" ");
+              var pctindex = dataout.shift();
+              var pct = pctindex.split('%').shift();
+              dataout.shift();
+              var process = dataout.shift();                                      
+              
+              logger.info(JSON.stringify({process:process, pct:pct.trim(), solrid:self.solrid}));             
+              deferred.notify(JSON.stringify({process:process, pct:pct.trim(), solrid:self.solrid}));  
+            }            
         });                
                
         return deferred.promise;

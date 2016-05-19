@@ -31,8 +31,8 @@ var config = {
     
     // Import parameters        
     dummy: false,
-    //last_processed: 'kms3696 8bit',
-    maxFileSize:  3000000000, // ---> control on size does'nt work??!! -> try with kms3696 8bit  
+    last_processed: 'kms3432',
+    maxFileSize:  300000000, // ---> control on size does'nt work??!! -> try with kms3696 8bit  
     solrParamsImportAll: {
                 //'q': 'invnumber%3Akms*+AND+(type%3A".tif"+OR+type%3A".jpg")',
                 'q': 'invnumber:kms* AND (type:".tif" OR type:".jpg" OR type:".tiff" OR type:".jpeg")',
@@ -98,7 +98,7 @@ var config = {
     originalCopyright : 'Iptc.Application2.Copyright',
     tempFilePath : '/tmp/',
     root : '/mnt/fotoII/',
-    port : 4000,
+    port : 4003,
     
     storage: {
       dev: '/mnt/damapistorage/dev/',
