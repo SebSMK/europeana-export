@@ -1,7 +1,7 @@
 {
-  "name": "corpus-image-server",
+  "name": "backend-image-processor",
   "version": "0.0.0",
-  "description": "Resizes images and overwrites exif on Corpus images.",
+  "description": " Restful access to SMK's data repository.",
   "main": "app.js",
   "dependencies": {
     "body-parser": "^1.14.2",
@@ -12,11 +12,13 @@
     "jade": "^1.11.0",
     "mmmagic": "^0.3.13",
     "mongodb": "~2.0",
+    "promisepipe": "^1.0.1",
     "proxy-middleware": "^0.15.0",
     "q": "^1.2.0",
     "request": "^2.65.0",
     "segfault-handler": "^0.2.4",
     "socket.io": "^1.3.7",
+    "solr-client": "^0.6.0",
     "sprintf-js": "^1.0.3",
     "upath": "^0.1.6",
     "winston": "^0.9.0"

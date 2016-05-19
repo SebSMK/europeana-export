@@ -4,7 +4,6 @@ var path = require('path'),
     fs = require('fs'),
     express = require('express'),
     Image = require('./image'),
-    MongoDB = require('./mongo'),
     config = require('./config'),
     SegfaultHandler = require('segfault-handler'), 
     Solr = require('./solr'),
@@ -115,67 +114,6 @@ app.post('/convert_pyr', (function(_this) {
     return processed_image_stream;
 })(this));
 
-
-/***
- *  DEV - NOT IN PROD
- **/
- 
-app.post('/mongoadd', function(req, res){
-    // Connect to mongo (url to mongo is in config.js)    
-    var mongodb = new MongoDB();    
-    var params = req.body;
-    var doc = Object.keys(params).length > 0 ? params : [{a : 1}, {a : 2}, {a : 3}];            
-    var query = {};
-    var collection = 'collection';    
-    
-    var display = mongodb.insertDocuments(doc, collection)
-    .then(function(data) {
-        return mongodb.findDocuments(query, collection);        
-    })
-    .then(function(data){
-        res.send(version + '<br>Result: <br>' + data);
-    })
-    .catch(function (err) {
-        /*catch and break on all errors or exceptions on all the above methods*/
-        logger.error('Mongo route', err);
-        res.send(version + '<br>Result: <br>' + err);
-    });     
-});
-
-app.post('/mongodel', function(req, res){
-    // Connect to mongo (url to mongo is in config.js)    
-    var mongodb = new MongoDB();        
-    var params = req.body;
-    var query = Object.keys(params).length > 0 ? params : {a : 1};
-    var collection = 'collection';    
-    
-    var display = mongodb.removeDocuments(query, collection)
-    .then(function(data){
-        res.send(version + '<br>Result: <br>' + data);
-    })
-    .catch(function (err) {
-        /*catch and break on all errors or exceptions on all the above methods*/
-        logger.error('Mongo reset route', err);
-        res.send(version + '<br>Result: <br>' + err);
-    });     
-});
-
-
-app.post('/solrdamedit', function(req, res){
-    var solr = new Solr(config.solrDAMHost, config.solrDAMPort, config.solrDAMCore);
-    var params = req.body;
-    var jsonposted = Object.keys(params).length > 0 ? params : [{"id":"561e19ebcd46a", "value":{"set":'test'}}];
-    
-    solr.postjson(jsonposted)
-        .then( function(solrResponse){
-           logger.info("solr post response :", solrResponse);
-           res.send(solrResponse);
-        }).catch(function (err) {
-        /*catch and break on all errors or exceptions on all the above methods*/
-        logger.error('solr route', err);
-        res.send(version + '<br>Solr error: <br>' + err);
-    });     
-});
 
 logger.info("Serving images from " + config.root + " on port " + config.port);
 

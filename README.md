@@ -1,6 +1,6 @@
-#corpus-image-server
+#backend-image-processor
 
-Node server to serve, convert and resize jpg images on demand
+API prototype - Restful access to SMK's data repository
 
 ## Dependencies
 
