@@ -1,181 +1,91 @@
-
 var Q = require('q'),
-    http = require('http'),
-    logger = require("./logging"),
+    solr = require('solr-client'),
     sprintf = require('sprintf-js').sprintf;
 
-Solr = (function() {
+SolrConnector = (function(){
 
-    /**
+     /**
      * Constructor
      **/
-    function Solr (host, port, core) {
-        logger.info("Solr Constructor", host + ':' + port);
-        this.host = host;
-        this.port = port;
-        this.core = core;
-    }
+     
+    function SolrConnector (config) {        
+        console.log("SolrConnector Constructor:", JSON.stringify(config));
+        this.config = config;              
+    }          
 
-    /**
-     * Instance Methods 
+
+     /**
+     * Public methods
      **/
-    Solr.prototype.get2 = function(path, params) {    
-        var reqpath = path + processParams(params);
-        var deferred = Q.defer(),
-            options = {
-                host: this.host,
-                port: this.port,
-                path: reqpath,
-                method: 'GET'
-            };
-
-        logger.info('OPTIONS: ', JSON.stringify(options, null, 4));
-        var get = http.get(options, function (resp) {
-
-            var data = '';
-            logger.info('STATUS: ' + resp.statusCode);
-            logger.info('HEADERS: ' + JSON.stringify(resp.headers));  
-            resp.setEncoding('utf8');
-
-            resp.on('data', function(chunk) {
-                data += chunk;
-            });
-            resp.on('end', function() {
-                if (data !== ''){
-                    var jsonData = JSON.parse(data);
-                    logger.debug("Solr: response received", JSON.stringify(jsonData, null, 4));
-                    deferred.resolve(jsonData);
-                }else{
-                    logger.error("Solr: empty GET result returned");
-                    deferred.reject("Solr: empty GET result returned");
-                }
-            });
-            resp.on('error', function(err) {
-                logger.error("Solr: http.request GET error: " + err);
-                deferred.reject(err);
-            });
-        });
+    
+    SolrConnector.prototype.queryhandler = function(params, use_def_query){
+       var query = {};
+       if (use_def_query) {                   
+            
+            // set variables elements of the query
+            query = JSON.parse(JSON.stringify(this.config.query.def)); // cloning JSON            
+            for (var p in params){              
+              if(this.config.query.exclude === undefined || (this.config.query.exclude !== undefined && this.config.query.exclude.indexOf(p) == -1)) // only if the parameter is not in the exclude list
+                query[p] = params[p];                                                                         
+            } 
+            
+            // set fixed elements of the query            
+            for (var f in this.config.query.fixed){              
+              switch(f) {
+                case 'q':
+                    var qval = params[f] === undefined ? '*:*' : params[f].toString(); 
+                    query[f] = sprintf(this.config.query.fixed[f], qval); 
+                  break;
+                default:
+                  query[f] = this.config.query.fixed[f];                                                  
+              }                                                           
+            } 
+                                     
+        } else {
+            query = params;
+        }            
+        return query;
+    };
+    
+    SolrConnector.prototype.handler = function(params, use_def_query, queryhandler) {
+        var deferred = Q.defer();
+        var client = this.client(this.config);
+        var res = {},
+            query = {};
+        var self = this;
+       
+        var getquery = queryhandler !== undefined ? queryhandler : self.queryhandler; 
+        query = getquery.call(self, params, use_def_query);
         
-        get.on('error', function(e) {
-            logger.error("Solr:", e.message);
-            deferred.reject("Solr:" + e.message);
-        });
+        console.log(query);
         
+        client.get('select', query, function(err, obj) {
+
+            if (err) {                
+                var solr_client_err_message = err.message.split("\r\n")[0];                                                
+                deferred.reject(JSON.parse(solr_client_err_message));
+            } else {                 
+                deferred.resolve(obj);
+            }
+        });
         return deferred.promise;
-    }
-    
-    Solr.prototype.get = function(path) {
-        var deferred = Q.defer(),
-            options = {
-                host: this.host,
-                port: this.port,
-                path: path,
-                method: 'GET'
-            };
+    };   
 
-        var get = http.get(options, function (resp) {
-
-            var data = '';
-            logger.info('STATUS: ' + resp.statusCode);
-            logger.info('HEADERS: ' + JSON.stringify(resp.headers));  
-            resp.setEncoding('utf8');
-
-            resp.on('data', function(chunk) {
-                data += chunk;
-            });
-            resp.on('end', function() {
-                if (data !== '' && data.indexOf('"error":') == -1){
-                    var jsonData = JSON.parse(data);
-                    logger.debug("Solr: response received", JSON.stringify(jsonData, null, 4));
-                    deferred.resolve(jsonData);
-                }else{
-                    logger.error("Solr: empty GET result returned");
-                    deferred.reject("Solr: empty GET result returned");
-                }
-            });
-            resp.on('error', function(err) {
-                logger.error("Solr: http.request GET error: " + err);
-                deferred.reject(err);
-            });
-        });
-        
-        get.on('error', function(e) {
-            logger.error("Solr:", e.message);
-            deferred.reject("Solr:" + e.message);
-        });
-        
-        return deferred.promise;
-    }
+    SolrConnector.prototype.client = function(config) {
+        return solr.createClient(config.host, config.port, '', config.core);
+    };
     
-    Solr.prototype.postjson = function(postjson) {
+    SolrConnector.prototype.setconfig = function(config) {
+        this.config = config || this.config;
+    };
     
-        var post_data = JSON.stringify(postjson);
-    
-        var deferred = Q.defer(),
-        options = {
-          host: this.host,
-          port: this.port,
-          path: this.core + 'update/?commit=true',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          method: 'POST'
-        };
-        
-        var post = http.request(options, function(resp) {          
-          var data = '';
-          logger.info('STATUS: ' + resp.statusCode);
-          logger.info('HEADERS: ' + JSON.stringify(resp.headers));  
-          resp.setEncoding('utf8');
-          resp.on('data', function(chunk) {
-                data += chunk;
-            });
-          resp.on('end', function() {
-              if (data !== '' && data.indexOf('"error":') == -1){
-                  var jsonData = JSON.parse(data);
-                  logger.debug("Solr: response received", JSON.stringify(jsonData, null, 4));
-                  deferred.resolve(jsonData);
-              }else{
-                  logger.error("Solr: empty postjson result returned");
-                  deferred.reject(data);
-              }
-          });
-          resp.on('error', function(err) {
-              logger.error("Solr: http.request postjson error: " + err);
-              deferred.reject(err);
-          });
-        });
-                
-        post.on('error', function(e) {
-          logger.error("Solr:", e.message);
-          deferred.reject("Solr:" + e.message);
-        });
-        
-        // write data to request body
-        post.write(post_data);
-        
-        post.end();            
-        
-        
-        return deferred.promise;
-    }
-    
-    
-    /***
-     * PRIVATE
-     **/    
-    processParams = function(solrParams){
-            var solrReq = [];
-
-            for (var key in solrParams) {
-                if (solrParams.hasOwnProperty(key)) {
-                    solrReq.push(sprintf('%s=%s', key, encodeURIComponent(solrParams[key])));
-                }
-            }            
-            return solrReq.join('&');    
-    }                
-    
-    return Solr;
+    SolrConnector.prototype.getconfig = function(){
+        return this.config;
+    };  
+            
+    return SolrConnector;
 })();
 
-module.exports = Solr;
+
+module.exports = SolrConnector;
+

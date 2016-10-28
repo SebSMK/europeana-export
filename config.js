@@ -5,7 +5,12 @@ connector_CollectionSpace = require('./connector_CollectionSpace');
 
 var config = {
 
-    version :  '000.001.045',
+    version :  '000.000.005',
+    
+    SMKAPIGetImgUri: 'http://demoapi.smk.dk/api/images?refnum=%s&size=%s',    
+    SMKAPIHighreslistUri: 'http://172.20.1.203:10011/api/images/list/',        
+    SMKAPIObjectUri: 'http://172.20.1.203:10011/api/artworks?refnum=%s',
+    EuropenaAPIImportUri: 'https://europeana-direct.semantika.eu/EuropeanaDirect/api/object',
             
     // dam
     dam:{  	   
@@ -98,7 +103,7 @@ var config = {
     originalCopyright : 'Iptc.Application2.Copyright',
     tempFilePath : '/tmp/',
     root : '/mnt/fotoII/',
-    port : 4003,
+    port : process.env.NODE_ENV != "production" ? 14011 : process.env.PORT || 14010,  
     
     storage: {
       dev: '/mnt/damapistorage/dev/',
